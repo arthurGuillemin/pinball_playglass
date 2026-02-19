@@ -1,0 +1,40 @@
+name: react-ci
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:  # permet de lancer le workflow sur github
+
+jobs:
+  
+  BuildInstallLint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: |
+          if npm run lint; then
+            echo "Lint passed"
+          else
+            echo "Lint warnings/errors, but not failing CI yet"
+          fi
+
+      - name: Build React
+        run: npm run build
