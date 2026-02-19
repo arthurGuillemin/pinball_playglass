@@ -17,7 +17,7 @@ function InclinedFloor() {
   return (
     <RigidBody type="fixed" colliders="cuboid">
       <mesh receiveShadow rotation={[Math.PI / 6, 0, 0]} position={[0, -1, 0]}>
-        <boxGeometry args={[10, 0.5, 10]} />
+        <boxGeometry args={[6, 0.5, 10]} />
         <meshStandardMaterial color="grey" />
       </mesh>
     </RigidBody>
@@ -35,7 +35,7 @@ function Walls() {
           rotation={[tilt, 0, 0]}
           position={[0, -1 + Math.sin(tilt) * 5, -Math.cos(tilt) * 5]}
         >
-          <boxGeometry args={[10, 3, 0.5]} />
+          <boxGeometry args={[6, 3, 0.5]} />
           <meshStandardMaterial color="grey" />
         </mesh>
       </RigidBody>
@@ -46,20 +46,20 @@ function Walls() {
           rotation={[tilt, 0, 0]}
           position={[0, -1 - Math.sin(tilt) * 5, Math.cos(tilt) * 5]}
         >
-          <boxGeometry args={[10, 3, 0.5]} />
+          <boxGeometry args={[6, 3, 0.5]} />
           <meshStandardMaterial color="grey" />
         </mesh>
       </RigidBody>
 
       <RigidBody type="fixed" colliders="cuboid">
-        <mesh receiveShadow rotation={[tilt, 0, 0]} position={[-5, -1, 0]}>
+        <mesh receiveShadow rotation={[tilt, 0, 0]} position={[-3, -1, 0]}>
           <boxGeometry args={[0.5, 3, 10]} />
           <meshStandardMaterial color="grey" />
         </mesh>
       </RigidBody>
 
       <RigidBody type="fixed" colliders="cuboid">
-        <mesh receiveShadow rotation={[tilt, 0, 0]} position={[5, -1, 0]}>
+        <mesh receiveShadow rotation={[tilt, 0, 0]} position={[3, -1, 0]}>
           <boxGeometry args={[0.5, 3, 10]} />
           <meshStandardMaterial color="grey" />
         </mesh>
@@ -71,7 +71,7 @@ function Walls() {
 export default function App() {
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
-      <Canvas shadows camera={{ position: [0, 5, 10], fov: 50 }}>
+      <Canvas shadows camera={{ position: [0, 6, 12], fov: 45 }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
 
