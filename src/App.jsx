@@ -9,7 +9,7 @@ import Ball from "./components/mvp/ball";
 import InclinedFloor from "./components/mvp/Floor";
 import Walls from "./components/mvp/walls";
 import Bumper from "./components/mvp/bumper";
-
+import Glass from "./components/mvp/glass";
 export default function App() {
   const flippers = useRef({
     right: { ref: useRef(), rotation: useRef() },
@@ -92,6 +92,7 @@ export default function App() {
           <Flipper side="left" ref={flippers.left.ref} />
           <FlipperAnimator />
           <Bumper />
+          <Glass />
         </Physics>
         <OrbitControls />
       </Canvas>
