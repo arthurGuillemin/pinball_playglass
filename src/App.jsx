@@ -91,7 +91,8 @@ export default function App() {
           <Flipper side="right" ref={flippers.right.ref} />
           <Flipper side="left" ref={flippers.left.ref} />
           <FlipperAnimator />
-          <Bumper />
+          <Bumper position={[-0.3, -0.71, 0]} points={100} />
+          <Bumper position={[0.8, -0.71, 0]} points={200} />
           <Glass />
         </Physics>
         <OrbitControls />

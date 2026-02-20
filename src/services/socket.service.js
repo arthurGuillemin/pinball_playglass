@@ -9,3 +9,11 @@ export const screensSocket = io(`${URL}/screens`, {
 export const controllersSocket = io(`${URL}/controllers`, {
   autoConnect: false,
 });
+
+export const emitScore = (points) => {
+  if (screensSocket.connected) {
+    screensSocket.emit("score_update", { points });
+  } else {
+    console.log(`[Socket non co] score local : +${points} pts`);
+  }
+};
