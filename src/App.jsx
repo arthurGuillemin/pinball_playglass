@@ -9,7 +9,7 @@ function Ball() {
   return (
     <RigidBody colliders="ball" restitution={0.6} friction={0.5}>
       <mesh castShadow>
-        <sphereGeometry args={[0.5, 32, 32]} />
+        <sphereGeometry args={[0.15, 32, 32]} />
         <meshStandardMaterial color="red" />
       </mesh>
     </RigidBody>
@@ -68,6 +68,26 @@ function Walls() {
         </mesh>
       </RigidBody>
     </>
+  );
+}
+
+function Bumper() {
+  const tilt = Math.PI / 6;
+
+  return (
+    <RigidBody
+      type="fixed"
+      colliders="ball"
+      restitution={4}
+      friction={0}
+      position={[-0.3, -0.71, 0]}
+      rotation={[tilt, 0, 0]}
+    >
+      <mesh castShadow>
+        <sphereGeometry args={[0.25, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
+        <meshStandardMaterial color="blue" />
+      </mesh>
+    </RigidBody>
   );
 }
 
@@ -152,8 +172,8 @@ export default function App() {
           <Flipper side="right" ref={flippers.right.ref} />
           <Flipper side="left" ref={flippers.left.ref} />
           <FlipperAnimator />
+          <Bumper />
         </Physics>
-
         <OrbitControls />
       </Canvas>
     </div>
