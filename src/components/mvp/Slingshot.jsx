@@ -18,15 +18,6 @@ function Slingshot({ position = [0, 0, 0], side = "left" }) {
     });
   }, []);
 
-  const impulseDirection = useMemo(
-    () => ({
-      x: isLeft ? -0.5 : 0.5,
-      y: 0,
-      z: 0.35,
-    }),
-    [isLeft],
-  );
-
   const meshRotation = useMemo(
     () => [-Math.PI / 3, 0, isLeft ? 3 : 4],
     [isLeft],
@@ -39,10 +30,6 @@ function Slingshot({ position = [0, 0, 0], side = "left" }) {
     const contactPoint = event.manifold.solverContactPoint(0);
     const onHypotenuse =
       Math.abs(contactPoint.x) > 0.1 && Math.abs(contactPoint.z) > 0.1;
-
-    if (onHypotenuse) {
-      ball.applyImpulse(impulseDirection, true);
-    }
   };
 
   return (
@@ -54,6 +41,7 @@ function Slingshot({ position = [0, 0, 0], side = "left" }) {
       >
         <mesh
           geometry={geometry}
+          restitution={4}
           castShadow
           receiveShadow
           rotation={meshRotation}

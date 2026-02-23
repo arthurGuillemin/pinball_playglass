@@ -1,12 +1,12 @@
 import { RigidBody } from "@react-three/rapier";
-import { emitScore } from "../../services/socket.service";
+import wsService from "../../services/socket.service";
+
 function Bumper({ position = [0, 0, 0], onScore, points }) {
   const tilt = Math.PI / 6;
 
   const handleCollision = () => {
-    console.log(`contact avec le bumper :${points}  points`);
     onScore?.(points);
-    emitScore(points);
+    wsService.emitScore(points);
   };
 
   return (

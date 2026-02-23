@@ -66,6 +66,18 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    wsService.connect();
+    wsService.screens.onopen = () => {
+      wsService.screens.send(
+        JSON.stringify({
+          type: "start_game",
+          playerName: "Player1",
+        }),
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     const keyMap = { ArrowRight: "right", ArrowLeft: "left" };
 
     const handleKey = (e, isActive) => {
@@ -118,7 +130,6 @@ export default function App() {
           <Bumper position={[-0.3, -0.71, 0]} points={100} />
           <Bumper position={[0.8, -0.71, 0]} points={200} />
           <Slingshot side="left" position={[-1, -1, 0.5]} />
-          <Slingshot side="right" position={[1, -1, 0.5]} />
           <Glass />
         </Physics>
         <OrbitControls />
