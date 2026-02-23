@@ -3,6 +3,7 @@ import { OrbitControls } from "@react-three/drei";
 import { Physics, RigidBody } from "@react-three/rapier";
 import { useState, useEffect, useRef } from "react";
 import { Quaternion, Euler } from "three";
+import wsService from "./services/socket.service.js";
 
 import Flipper from "./components/mvp/Flipper";
 import Ball from "./components/mvp/ball";
@@ -11,6 +12,7 @@ import Walls from "./components/mvp/walls";
 import Bumper from "./components/mvp/bumper";
 import Glass from "./components/mvp/glass";
 import Slingshot from "./components/mvp/Slingshot";
+
 export default function App() {
   const flippers = useRef({
     right: { ref: useRef(), rotation: useRef() },
@@ -40,6 +42,27 @@ export default function App() {
   useEffect(() => {
     flippers.right.rotation.current = rotations.baseRight.clone();
     flippers.left.rotation.current = rotations.baseLeft.clone();
+  }, []);
+
+  useEffect(() => {
+    wsService.connect();
+
+    wsService.onMessage((data) => {
+      console.log("Message reçu:", data);
+
+      if (data.type !== "BUTTON") return;
+
+      if (data.event === "LEFT_FLIPPER_DOWN")
+        setActiveFlippers((prev) => ({ ...prev, left: true }));
+      if (data.event === "LEFT_FLIPPER_UP")
+        setActiveFlippers((prev) => ({ ...prev, left: false }));
+      if (data.event === "RIGHT_FLIPPER_DOWN")
+        setActiveFlippers((prev) => ({ ...prev, right: true }));
+      if (data.event === "RIGHT_FLIPPER_UP")
+        setActiveFlippers((prev) => ({ ...prev, right: false }));
+    });
+
+    return () => wsService.disconnect();
   }, []);
 
   useEffect(() => {
@@ -92,7 +115,8 @@ export default function App() {
           <Flipper side="right" ref={flippers.right.ref} />
           <Flipper side="left" ref={flippers.left.ref} />
           <FlipperAnimator />
-          <Bumper />
+          <Bumper position={[-0.3, -0.71, 0]} points={100} />
+          <Bumper position={[0.8, -0.71, 0]} points={200} />
           <Slingshot side="left" position={[-1, -1, 0.5]} />
           <Slingshot side="right" position={[1, -1, 0.5]} />
           <Glass />
