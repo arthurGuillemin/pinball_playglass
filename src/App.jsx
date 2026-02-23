@@ -10,6 +10,7 @@ import InclinedFloor from "./components/mvp/Floor";
 import Walls from "./components/mvp/walls";
 import Bumper from "./components/mvp/bumper";
 import Glass from "./components/mvp/glass";
+import Slingshot from "./components/mvp/Slingshot";
 export default function App() {
   const flippers = useRef({
     right: { ref: useRef(), rotation: useRef() },
@@ -92,6 +93,8 @@ export default function App() {
           <Flipper side="left" ref={flippers.left.ref} />
           <FlipperAnimator />
           <Bumper />
+          <Slingshot side="left" position={[-1, -1, 0.5]} />
+          <Slingshot side="right" position={[1, -1, 0.5]} />
           <Glass />
         </Physics>
         <OrbitControls />
