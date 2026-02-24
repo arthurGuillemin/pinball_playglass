@@ -127,9 +127,11 @@ export default function App() {
           <Flipper side="right" ref={flippers.right.ref} />
           <Flipper side="left" ref={flippers.left.ref} />
           <FlipperAnimator />
-          <Bumper position={[-0.3, -0.71, 0]} points={100} />
-          <Bumper position={[0.8, -0.71, 0]} points={200} />
-          <Slingshot side="left" position={[-1, -1, 0.5]} />
+          <Bumper position={[-1, 0.45, -2]} points={100} />
+          <Bumper position={[1, 0.45, -2]} points={200} />
+          <Bumper position={[0, -0.15, -1]} points={100} />
+          <Slingshot side="left" position={[-2, -2.1, 2.4]} />
+          <Slingshot side="right" position={[2, -2.1, 2.4]} />
           <Glass />
         </Physics>
         <OrbitControls />
