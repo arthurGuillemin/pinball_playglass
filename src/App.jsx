@@ -12,8 +12,12 @@ import Walls from "./components/mvp/walls";
 import Bumper from "./components/mvp/bumper";
 import Glass from "./components/mvp/glass";
 import Slingshot from "./components/mvp/Slingshot";
+import RightLane from "./components/mvp/launchLane";
+import Launcher from "./components/mvp/launcher";
+import SideWall from "./components/mvp/sideWall";
 
 export default function App() {
+  const ballRef = useRef();
   const flippers = useRef({
     right: { ref: useRef(), rotation: useRef() },
     left: { ref: useRef(), rotation: useRef() },
@@ -121,16 +125,18 @@ export default function App() {
         <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Ball />
+          <Ball ballRef={ballRef} />
           <InclinedFloor />
           <Walls />
-          <Flipper side="right" ref={flippers.right.ref} />
           <Flipper side="left" ref={flippers.left.ref} />
           <FlipperAnimator />
           <Bumper position={[-0.3, -0.71, 0]} points={100} />
           <Bumper position={[0.8, -0.71, 0]} points={200} />
           <Slingshot side="left" position={[-1, -1, 0.5]} />
           <Glass />
+          <RightLane />
+          <Launcher ballRef={ballRef} />
+          <SideWall />
         </Physics>
         <OrbitControls />
       </Canvas>
