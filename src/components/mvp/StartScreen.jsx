@@ -1,6 +1,14 @@
 import wsService from "../../services/socket.service";
+import { useState } from "react";
 
 export default function StartScreen({ score }) {
+  const [playerName, setPlayerName] = useState("");
+
+  const handleStart = () => {
+    if (!playerName.trim()) return;
+    wsService.startGame(playerName.trim());
+  };
+
   return (
     <div
       style={{
@@ -20,9 +28,22 @@ export default function StartScreen({ score }) {
           <p style={{ color: "white", fontSize: 24 }}>Score : {score}</p>
         </>
       )}
-      <p style={{ color: "white", fontSize: 48 }}>FLIPPER MVP</p>
+      <p style={{ color: "white", fontSize: 48 }}>FLIPPEzz R MVP</p>
+      <input
+        value={playerName}
+        onChange={(e) => setPlayerName(e.target.value)}
+        placeholder="Ton pseudo"
+        style={{
+          padding: "10px 20px",
+          fontSize: 20,
+          borderRadius: 8,
+          border: "none",
+          textAlign: "center",
+        }}
+      />
       <button
-        onClick={() => wsService.startGame("Player1")}
+        onClick={handleStart}
+        disabled={!playerName.trim()}
         style={{
           padding: "15px 40px",
           fontSize: 24,
@@ -31,6 +52,7 @@ export default function StartScreen({ score }) {
           color: "white",
           border: "none",
           borderRadius: 8,
+          opacity: playerName.trim() ? 1 : 0.5,
         }}
       >
         START
