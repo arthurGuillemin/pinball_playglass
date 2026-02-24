@@ -14,6 +14,13 @@ import Glass from "./components/mvp/glass";
 import Slingshot from "./components/mvp/Slingshot";
 
 export default function App() {
+  const [gameState, setGameState] = useState({
+    isRunning: false,
+    score: 0,
+    balls: 3,
+    currentPlayer: "arthur",
+  });
+
   const flippers = useRef({
     right: { ref: useRef(), rotation: useRef() },
     left: { ref: useRef(), rotation: useRef() },
@@ -48,51 +55,48 @@ export default function App() {
     wsService.connect();
 
     wsService.onMessage((data) => {
-      console.log("Message reçu:", data);
-
       if (data.type !== "BUTTON") return;
-
       if (data.event === "LEFT_FLIPPER_DOWN")
-        setActiveFlippers((prev) => ({ ...prev, left: true }));
+        setActiveFlippers((p) => ({ ...p, left: true }));
       if (data.event === "LEFT_FLIPPER_UP")
-        setActiveFlippers((prev) => ({ ...prev, left: false }));
+        setActiveFlippers((p) => ({ ...p, left: false }));
       if (data.event === "RIGHT_FLIPPER_DOWN")
-        setActiveFlippers((prev) => ({ ...prev, right: true }));
+        setActiveFlippers((p) => ({ ...p, right: true }));
       if (data.event === "RIGHT_FLIPPER_UP")
-        setActiveFlippers((prev) => ({ ...prev, right: false }));
+        setActiveFlippers((p) => ({ ...p, right: false }));
+    });
+
+    wsService.onScreenMessage((data) => {
+      if (data.type === "state_update") {
+        setGameState(data.state);
+      }
+      if (data.type === "game_over") {
+        setGameState(data.state);
+        fetch("http://localhost:3000/api/scores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            player_name: data.state.currentPlayer,
+            score: data.state.score,
+          }),
+        });
+      }
     });
 
     return () => wsService.disconnect();
   }, []);
 
   useEffect(() => {
-    wsService.connect();
-    wsService.screens.onopen = () => {
-      wsService.screens.send(
-        JSON.stringify({
-          type: "start_game",
-          playerName: "Player1",
-        }),
-      );
-    };
-  }, []);
-
-  useEffect(() => {
     const keyMap = { ArrowRight: "right", ArrowLeft: "left" };
-
     const handleKey = (e, isActive) => {
       const side = keyMap[e.code];
-      if (side) setActiveFlippers((prev) => ({ ...prev, [side]: isActive }));
+      if (side) setActiveFlippers((p) => ({ ...p, [side]: isActive }));
     };
-
-    const handleKeyDown = (e) => handleKey(e, true);
-    const handleKeyUp = (e) => handleKey(e, false);
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("keydown", (e) => handleKey(e, true));
+    window.addEventListener("keyup", (e) => handleKey(e, false));
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("keydown", (e) => handleKey(e, true));
+      window.removeEventListener("keyup", (e) => handleKey(e, false));
     };
   }, []);
 
@@ -114,14 +118,69 @@ export default function App() {
     return null;
   }
 
+  if (!gameState.isRunning) {
+    return (
+      <div
+        style={{
+          width: "100vw",
+          height: "100vh",
+          background: "black",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 20,
+        }}
+      >
+        {gameState.score > 0 && (
+          <>
+            <p style={{ color: "white", fontSize: 32 }}>GAME OVER</p>
+            <p style={{ color: "white", fontSize: 24 }}>
+              Score : {gameState.score}
+            </p>
+          </>
+        )}
+        <p style={{ color: "white", fontSize: 48 }}>FLIPPER MVP</p>
+        <button
+          onClick={() => wsService.startGame("Player1")}
+          style={{
+            padding: "15px 40px",
+            fontSize: 24,
+            cursor: "pointer",
+            background: "blue",
+            color: "white",
+            border: "none",
+            borderRadius: 8,
+          }}
+        >
+          START
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          color: "white",
+          fontSize: 20,
+          zIndex: 10,
+        }}
+      >
+        <p>Score : {gameState.score}</p>
+        <p>HP : {gameState.balls}</p>
+      </div>
+
       <Canvas shadows camera={{ position: [0, 6, 12], fov: 45 }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Ball />
+          <Ball onBallLost={() => wsService.emitBallLost()} />
           <InclinedFloor />
           <Walls />
           <Flipper side="right" ref={flippers.right.ref} />
