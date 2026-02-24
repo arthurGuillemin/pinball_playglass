@@ -7,41 +7,45 @@ function Slingshot({ position = [0, 0, 0], side = "left" }) {
 
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
-    shape.moveTo(0, 0);
-    shape.lineTo(0, 1.8);
-    shape.lineTo(1, 0);
-    shape.lineTo(0, 0);
+    if (isLeft) {
+      shape.moveTo(0, 0);
+      shape.lineTo(0, 1.8);
+      shape.lineTo(1, 0);
+      shape.lineTo(0, 0);
+    } else {
+      shape.moveTo(0, 0);
+      shape.lineTo(0, 1.8);
+      shape.lineTo(-1, 0);
+      shape.lineTo(0, 0);
+    }
 
     return new THREE.ExtrudeGeometry(shape, {
       depth: 0.5,
       bevelEnabled: false,
     });
-  }, []);
+  }, [isLeft]);
 
   const meshRotation = useMemo(
-    () => [-Math.PI / 3, 0, isLeft ? 3 : 4],
+    () => [-Math.PI / 3, 0, isLeft ? 0 : -6.3],
     [isLeft],
   );
 
   const handleCollision = (event) => {
-    const ball = event.other.rigidBody;
-    if (!ball || !event.manifold) return;
-
     const contactPoint = event.manifold.solverContactPoint(0);
     const onHypotenuse =
       Math.abs(contactPoint.x) > 0.1 && Math.abs(contactPoint.z) > 0.1;
   };
 
   return (
-    <group position={position} rotation={[0, 0, 0]}>
+    <group position={position}>
       <RigidBody
         type="fixed"
         colliders="hull"
+        restitution={4}
         onCollisionEnter={handleCollision}
       >
         <mesh
           geometry={geometry}
-          restitution={4}
           castShadow
           receiveShadow
           rotation={meshRotation}
