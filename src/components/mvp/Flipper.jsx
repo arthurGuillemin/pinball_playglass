@@ -6,14 +6,14 @@ const Flipper = forwardRef(
     {
       side = "right",
       position,
-      size = [3, 0.5, 0.5],
+      size = [2.7, 0.5, 0.5],
       color,
       rotation = [Math.PI / 6, 0, 0],
     },
     ref,
   ) => {
     const isLeft = side === "left";
-    const defaultPosition = isLeft ? [-3, -1.8, 2.5] : [3, -1.8, 2.5];
+    const defaultPosition = isLeft ? [-3, -2.8, 4] : [3, -2.8, 4];
     const defaultColor = isLeft ? "pink" : "blue";
     const meshOffset = isLeft ? size[0] / 2 : -size[0] / 2;
     const yRotation = isLeft ? -Math.PI / 12 : Math.PI / 12;
