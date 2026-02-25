@@ -12,6 +12,9 @@ import Walls from "./components/mvp/walls";
 import Bumper from "./components/mvp/bumper";
 import Glass from "./components/mvp/glass";
 import Slingshot from "./components/mvp/Slingshot";
+import RightLane from "./components/mvp/launchLane";
+import Launcher from "./components/mvp/launcher";
+import SideWall from "./components/mvp/sideWall";
 import FlipperAnimator from "./components/mvp/FlipperAnimator";
 import StartScreen from "./components/mvp/StartScreen";
 
@@ -37,6 +40,7 @@ export default function App() {
   const gameState = useGameState();
   const { activeFlippers } = useFlipperControls();
 
+  const ballRef = useRef();
   const rightFlipperRef = useRef();
   const leftFlipperRef = useRef();
   const rightRotation = useRef();
@@ -75,6 +79,7 @@ export default function App() {
       >
         <p>Score : {gameState.score}</p>
         <p>HP : {gameState.balls}</p>
+        {console.log(gameState)}
       </div>
 
       <Canvas shadows camera={{ position: [0, 6, 12], fov: 45 }}>
@@ -82,7 +87,7 @@ export default function App() {
         <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Ball onBallLost={() => wsService.emitBallLost()} />
+          <Ball ballRef={ballRef} onBallLost={() => wsService.emitBallLost()} />
           <InclinedFloor />
           <Walls />
           <Flipper side="right" ref={rightFlipperRef} />
@@ -98,6 +103,9 @@ export default function App() {
           <Slingshot side="left" position={[-2, -2.1, 2.4]} />
           <Slingshot side="right" position={[2, -2.1, 2.4]} />
           <Glass />
+          <RightLane />
+          <Launcher ballRef={ballRef} />
+          <SideWall />
         </Physics>
         <OrbitControls />
       </Canvas>
