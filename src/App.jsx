@@ -1,97 +1,111 @@
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Physics, RigidBody } from "@react-three/rapier";
-import { useState, useEffect, useRef } from "react";
+import { Physics } from "@react-three/rapier";
+import { useEffect, useRef } from "react";
 import { Quaternion, Euler } from "three";
+import wsService from "./services/socket.service.js";
 
 import Flipper from "./components/mvp/Flipper";
 import Ball from "./components/mvp/ball";
 import InclinedFloor from "./components/mvp/Floor";
 import Walls from "./components/mvp/walls";
 import Bumper from "./components/mvp/bumper";
+import Glass from "./components/mvp/glass";
+import Slingshot from "./components/mvp/Slingshot";
+import RightLane from "./components/mvp/launchLane";
+import Launcher from "./components/mvp/launcher";
+import SideWall from "./components/mvp/sideWall";
+import FlipperAnimator from "./components/mvp/FlipperAnimator";
+import StartScreen from "./components/mvp/StartScreen";
+
+import { useFlipperControls } from "./hooks/useFlipperControls";
+import { useGameState } from "./hooks/useGameState";
+
+const ROTATIONS = {
+  baseRight: new Quaternion().setFromEuler(
+    new Euler(Math.PI / 6, Math.PI / 12, 0),
+  ),
+  baseLeft: new Quaternion().setFromEuler(
+    new Euler(Math.PI / 6, -Math.PI / 12, 0),
+  ),
+  activeRight: new Quaternion().setFromEuler(
+    new Euler(Math.PI / 6, Math.PI / 12 - Math.PI / 4, 0),
+  ),
+  activeLeft: new Quaternion().setFromEuler(
+    new Euler(Math.PI / 6, -Math.PI / 12 + Math.PI / 4, 0),
+  ),
+};
 
 export default function App() {
-  const flippers = useRef({
-    right: { ref: useRef(), rotation: useRef() },
-    left: { ref: useRef(), rotation: useRef() },
-  }).current;
+  const gameState = useGameState();
+  const { activeFlippers } = useFlipperControls();
 
-  const [activeFlippers, setActiveFlippers] = useState({
-    right: false,
-    left: false,
-  });
+  const ballRef = useRef();
+  const rightFlipperRef = useRef();
+  const leftFlipperRef = useRef();
+  const rightRotation = useRef();
+  const leftRotation = useRef();
 
-  const rotations = useRef({
-    baseRight: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, Math.PI / 12, 0),
-    ),
-    baseLeft: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, -Math.PI / 12, 0),
-    ),
-    activeRight: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, Math.PI / 12 - Math.PI / 4, 0),
-    ),
-    activeLeft: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, -Math.PI / 12 + Math.PI / 4, 0),
-    ),
-  }).current;
+  const flippers = {
+    right: { ref: rightFlipperRef, rotation: rightRotation },
+    left: { ref: leftFlipperRef, rotation: leftRotation },
+  };
 
   useEffect(() => {
-    flippers.right.rotation.current = rotations.baseRight.clone();
-    flippers.left.rotation.current = rotations.baseLeft.clone();
+    rightRotation.current = ROTATIONS.baseRight.clone();
+    leftRotation.current = ROTATIONS.baseLeft.clone();
   }, []);
 
   useEffect(() => {
-    const keyMap = { ArrowRight: "right", ArrowLeft: "left" };
-
-    const handleKey = (e, isActive) => {
-      const side = keyMap[e.code];
-      if (side) setActiveFlippers((prev) => ({ ...prev, [side]: isActive }));
-    };
-
-    const handleKeyDown = (e) => handleKey(e, true);
-    const handleKeyUp = (e) => handleKey(e, false);
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-    };
+    wsService.connect();
+    return () => wsService.disconnect();
   }, []);
 
-  function FlipperAnimator() {
-    useFrame(() => {
-      ["right", "left"].forEach((side) => {
-        const flipper = flippers[side];
-        if (flipper.ref.current) {
-          const targetQuat = activeFlippers[side]
-            ? rotations[`active${side.charAt(0).toUpperCase() + side.slice(1)}`]
-            : rotations[`base${side.charAt(0).toUpperCase() + side.slice(1)}`];
-          flipper.rotation.current.slerp(targetQuat, 0.3);
-          flipper.ref.current.setNextKinematicRotation(
-            flipper.rotation.current,
-          );
-        }
-      });
-    });
-    return null;
+  if (!gameState.isRunning) {
+    return <StartScreen score={gameState.score} />;
   }
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100vw", height: "100vh", position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          color: "white",
+          fontSize: 20,
+          zIndex: 10,
+        }}
+      >
+        <p>Score : {gameState.score}</p>
+        <p>HP : {gameState.balls}</p>
+        {console.log(gameState)}
+      </div>
+
       <Canvas shadows camera={{ position: [0, 6, 12], fov: 45 }}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
 
         <Physics gravity={[0, -9.81, 0]}>
-          <Ball />
+          <Ball ballRef={ballRef} onBallLost={() => wsService.emitBallLost()} />
           <InclinedFloor />
           <Walls />
-          <Flipper side="right" ref={flippers.right.ref} />
-          <Flipper side="left" ref={flippers.left.ref} />
-          <FlipperAnimator />
-          <Bumper />
+          <Flipper side="right" ref={rightFlipperRef} />
+          <Flipper side="left" ref={leftFlipperRef} />
+          <FlipperAnimator
+            flippers={flippers}
+            activeFlippers={activeFlippers}
+            rotations={ROTATIONS}
+          />
+          <Bumper position={[-1, 0.45, -2]} points={100} />
+          <Bumper position={[1, 0.45, -2]} points={200} />
+          <Bumper position={[0, -0.15, -1]} points={100} />
+          <Slingshot side="left" position={[-2, -2.1, 2.4]} />
+          <Slingshot side="right" position={[2, -2.1, 2.4]} />
+          <Glass />
+          <RightLane />
+          <Launcher ballRef={ballRef} />
+          <SideWall />
         </Physics>
         <OrbitControls />
       </Canvas>
