@@ -1,99 +1,204 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Physics, RigidBody } from "@react-three/rapier";
-import { useState, useEffect, useRef } from "react";
+import { Physics } from "@react-three/rapier";
+import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import { Quaternion, Euler } from "three";
 
-import Flipper from "./components/mvp/Flipper";
+import FlipperGLTF, { FlipperStaticWalls } from "./components/mvp/FlipperGLTF";
+import { PinballTable } from "./components/mvp/PinballTable";
 import Ball from "./components/mvp/ball";
-import InclinedFloor from "./components/mvp/Floor";
-import Walls from "./components/mvp/walls";
-import Bumper from "./components/mvp/bumper";
+
+const FLIP_Y = Math.PI;
+const TILT_X = (6.5 * Math.PI) / 180;
+const ANGLE_ACTIVE = (35 * Math.PI) / 180;
+const SLERP = 0.3;
+
+// Hors du composant — pas de problème de ref pendant le render
+const ROTATIONS = {
+  baseRight: new Quaternion().setFromEuler(new Euler(0, 0, 0)),
+  baseLeft: new Quaternion().setFromEuler(new Euler(0, 0, 0)),
+  activeRight: new Quaternion().setFromEuler(new Euler(0, -ANGLE_ACTIVE, 0)),
+  activeLeft: new Quaternion().setFromEuler(new Euler(0, ANGLE_ACTIVE, 0)),
+};
+
+function FlipperAnimator({
+  rightRef,
+  leftRef,
+  rightRot,
+  leftRot,
+  activeFlippers,
+}) {
+  useFrame(() => {
+    if (rightRef.current) {
+      rightRot.current.slerp(
+        activeFlippers.right ? ROTATIONS.activeRight : ROTATIONS.baseRight,
+        SLERP,
+      );
+      rightRef.current.setNextKinematicRotation(rightRot.current);
+    }
+    if (leftRef.current) {
+      leftRot.current.slerp(
+        activeFlippers.left ? ROTATIONS.activeLeft : ROTATIONS.baseLeft,
+        SLERP,
+      );
+      leftRef.current.setNextKinematicRotation(leftRot.current);
+    }
+  });
+  return null;
+}
 
 export default function App() {
-  const flippers = useRef({
-    right: { ref: useRef(), rotation: useRef() },
-    left: { ref: useRef(), rotation: useRef() },
-  }).current;
+  const rightRef = useRef(null);
+  const leftRef = useRef(null);
+  const rightRot = useRef(new Quaternion());
+  const leftRot = useRef(new Quaternion());
 
   const [activeFlippers, setActiveFlippers] = useState({
     right: false,
     left: false,
   });
-
-  const rotations = useRef({
-    baseRight: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, Math.PI / 12, 0),
-    ),
-    baseLeft: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, -Math.PI / 12, 0),
-    ),
-    activeRight: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, Math.PI / 12 - Math.PI / 4, 0),
-    ),
-    activeLeft: new Quaternion().setFromEuler(
-      new Euler(Math.PI / 6, -Math.PI / 12 + Math.PI / 4, 0),
-    ),
-  }).current;
+  const [score, setScore] = useState(0);
+  const [charging, setCharging] = useState(false);
+  const [chargeLevel, setChargeLevel] = useState(0);
 
   useEffect(() => {
-    flippers.right.rotation.current = rotations.baseRight.clone();
-    flippers.left.rotation.current = rotations.baseLeft.clone();
+    const onCharge = (e) => {
+      setCharging(e.detail.charging);
+      setChargeLevel(e.detail.level);
+    };
+    window.addEventListener("ball-charge", onCharge);
+    return () => window.removeEventListener("ball-charge", onCharge);
   }, []);
 
   useEffect(() => {
-    const keyMap = { ArrowRight: "right", ArrowLeft: "left" };
-
-    const handleKey = (e, isActive) => {
-      const side = keyMap[e.code];
-      if (side) setActiveFlippers((prev) => ({ ...prev, [side]: isActive }));
+    const onDown = (e) => {
+      if (e.code === "ArrowRight")
+        setActiveFlippers((p) => ({ ...p, right: true }));
+      if (e.code === "ArrowLeft")
+        setActiveFlippers((p) => ({ ...p, left: true }));
     };
-
-    const handleKeyDown = (e) => handleKey(e, true);
-    const handleKeyUp = (e) => handleKey(e, false);
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    const onUp = (e) => {
+      if (e.code === "ArrowRight")
+        setActiveFlippers((p) => ({ ...p, right: false }));
+      if (e.code === "ArrowLeft")
+        setActiveFlippers((p) => ({ ...p, left: false }));
+    };
+    window.addEventListener("keydown", onDown);
+    window.addEventListener("keyup", onUp);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("keydown", onDown);
+      window.removeEventListener("keyup", onUp);
     };
   }, []);
 
-  function FlipperAnimator() {
-    useFrame(() => {
-      ["right", "left"].forEach((side) => {
-        const flipper = flippers[side];
-        if (flipper.ref.current) {
-          const targetQuat = activeFlippers[side]
-            ? rotations[`active${side.charAt(0).toUpperCase() + side.slice(1)}`]
-            : rotations[`base${side.charAt(0).toUpperCase() + side.slice(1)}`];
-          flipper.rotation.current.slerp(targetQuat, 0.3);
-          flipper.ref.current.setNextKinematicRotation(
-            flipper.rotation.current,
-          );
-        }
-      });
-    });
-    return null;
-  }
+  const onBumperHit = useCallback(() => setScore((s) => s + 100), []);
+  const onSlingshotHit = useCallback(() => setScore((s) => s + 50), []);
 
   return (
-    <div style={{ width: "100vw", height: "100vh" }}>
-      <Canvas shadows camera={{ position: [0, 6, 12], fov: 45 }}>
+    <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          color: "#fff",
+          fontFamily: "monospace",
+          fontSize: "1.8rem",
+          textShadow: "0 0 12px #ff0",
+          zIndex: 10,
+          pointerEvents: "none",
+        }}
+      >
+        SCORE : {score}
+      </div>
+
+      {charging && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: 60,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 200,
+            height: 14,
+            background: "#222",
+            borderRadius: 7,
+            overflow: "hidden",
+            zIndex: 10,
+            border: "1px solid #555",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${chargeLevel * 100}%`,
+              background: `hsl(${120 - chargeLevel * 120}, 90%, 50%)`,
+              borderRadius: 7,
+            }}
+          />
+        </div>
+      )}
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          color: "#aaa",
+          fontFamily: "monospace",
+          fontSize: "0.85rem",
+          zIndex: 10,
+          pointerEvents: "none",
+        }}
+      >
+        ← Flipper G &nbsp;|&nbsp; Flipper D → &nbsp;|&nbsp; [Espace] Lancer
+        &nbsp;|&nbsp; [R] Respawn
+      </div>
+
+      <Canvas
+        shadows
+        camera={{ position: [0, 3, 2.5], fov: 45, near: 0.01, far: 100 }}
+      >
         <ambientLight intensity={0.5} />
-        <directionalLight position={[5, 10, 5]} intensity={1} castShadow />
+        <directionalLight
+          position={[0.5, 4, 1]}
+          intensity={1.2}
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+        />
 
         <Physics gravity={[0, -9.81, 0]}>
+          <group rotation={[TILT_X, FLIP_Y, 0]}>
+            <Suspense fallback={null}>
+              <PinballTable
+                onBumperHit={onBumperHit}
+                onSlingshotHit={onSlingshotHit}
+              />
+              <FlipperStaticWalls side="left" />
+              <FlipperStaticWalls side="right" />
+            </Suspense>
+          </group>
+
+          <Suspense fallback={null}>
+            <FlipperGLTF side="left" ref={leftRef} />
+            <FlipperGLTF side="right" ref={rightRef} />
+          </Suspense>
+
           <Ball />
-          <InclinedFloor />
-          <Walls />
-          <Flipper side="right" ref={flippers.right.ref} />
-          <Flipper side="left" ref={flippers.left.ref} />
-          <FlipperAnimator />
-          <Bumper />
+
+          <FlipperAnimator
+            rightRef={rightRef}
+            leftRef={leftRef}
+            rightRot={rightRot}
+            leftRot={leftRot}
+            activeFlippers={activeFlippers}
+          />
         </Physics>
-        <OrbitControls />
+
+        <OrbitControls makeDefault target={[0, 0, 0]} />
       </Canvas>
     </div>
   );
