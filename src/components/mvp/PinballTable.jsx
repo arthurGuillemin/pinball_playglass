@@ -12,6 +12,8 @@ const STATIC_WALL_NODES = [
   "COL_wall_mini_down_R",
   "COL_luncher_L",
   "COL_luncher_L_up",
+  "COL_fork_mini_R_left",
+  "COL_fork_mini_R_right",
 ];
 
 const CURVE_NODES = [
@@ -23,15 +25,21 @@ const CURVE_NODES = [
   "COL_CURVE_cave_up_middle",
   "COL_CURVE_cave_down_L",
   "COL_CURVE_circle",
-  "COL_CURVE_wall_block_L",
-  "COL_CURVE_wall_block_R.001",
+  "COL_CURVE_flipper_down_courbe_R",
+  "COL_CURVE_flipper_down_courbe_L",
 ];
+
+// Nodes avec scale non-1 → hull obligatoire
+const HULL_NODES = ["COL_CURVE_wall_block_L"];
 
 const BUMPER_NODES = [
   "COL_bumper_01",
   "COL_bumper_02",
   "COL_bumper_03",
   "COL_bumper_04",
+  "COL_mini_bumper_01",
+  "COL_mini_bumper_02",
+  "COL_mini_bumper_03",
 ];
 
 const defaultMat = new MeshStandardMaterial({ color: "#aaaaaa", side: 2 });
@@ -46,6 +54,30 @@ function StaticMesh({ node, restitution = 0.3, friction = 0.4, onContact }) {
       onCollisionEnter={onContact}
     >
       <MeshCollider type="trimesh">
+        <mesh
+          geometry={node.geometry}
+          material={node.material ?? defaultMat}
+          position={node.position}
+          quaternion={node.quaternion}
+          scale={node.scale}
+          castShadow
+          receiveShadow
+        />
+      </MeshCollider>
+    </RigidBody>
+  );
+}
+
+function HullMesh({ node, restitution = 0.3, friction = 0.4, onContact }) {
+  return (
+    <RigidBody
+      type="fixed"
+      colliders={false}
+      restitution={restitution}
+      friction={friction}
+      onCollisionEnter={onContact}
+    >
+      <MeshCollider type="hull">
         <mesh
           geometry={node.geometry}
           material={node.material ?? defaultMat}
@@ -110,6 +142,14 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
         );
       })}
 
+      {HULL_NODES.map((name) => {
+        const node = nodes[name];
+        if (!node) return null;
+        return (
+          <HullMesh key={name} node={node} restitution={0.5} friction={0.3} />
+        );
+      })}
+
       {["COL_SLING_slingshot_R", "COL_SLING_slingshot_L"].map((name) => {
         const node = nodes[name];
         if (!node) return null;
@@ -122,7 +162,7 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
         const node = nodes[name];
         if (!node) return null;
         return (
-          <StaticMesh
+          <HullMesh
             key={name}
             node={node}
             restitution={5}

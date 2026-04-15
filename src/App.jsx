@@ -6,7 +6,7 @@ import { Quaternion, Euler } from "three";
 import FlipperGLTF, { FlipperStaticWalls } from "./components/mvp/FlipperGLTF";
 import { PinballTable } from "./components/mvp/PinballTable";
 import Ball from "./components/mvp/ball";
-
+import StatsPanel from "./components/mvp/stats";
 const FLIP_Y = Math.PI;
 const TILT_X = (6.5 * Math.PI) / 180;
 const ANGLE_ACTIVE = (50 * Math.PI) / 180;
@@ -183,7 +183,9 @@ export default function App() {
           shadow-mapSize-height={2048}
         />
 
-        <Physics gravity={[0, -9.81, 0]}>
+        <StatsPanel />
+
+        <Physics gravity={[0, -9.81, 0]} debug={true}>
           <group rotation={[TILT_X, FLIP_Y, 0]}>
             <Suspense fallback={null}>
               <PinballTable
