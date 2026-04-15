@@ -4,6 +4,7 @@ import { useRef, useEffect, useCallback } from "react";
 const MAX_CHARGE_TIME = 1500;
 const MAX_VELOCITY = 4;
 const SPAWN = { x: 0.41, y: 0.03, z: 0.78 };
+const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 }; //spawn de debug
 
 function Ball() {
   const ref = useRef(null);
@@ -19,6 +20,16 @@ function Ball() {
   const respawn = useCallback(() => {
     if (!ref.current) return;
     ref.current.setTranslation(SPAWN, true);
+    ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    cancelAnimationFrame(animFrame.current);
+    chargeStart.current = null;
+    emitCharge(false);
+  }, []);
+
+  const respawnMiddle = useCallback(() => {
+    if (!ref.current) return;
+    ref.current.setTranslation(MiddleSpawn, true);
     ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
     ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
     cancelAnimationFrame(animFrame.current);
@@ -55,6 +66,9 @@ function Ball() {
         animFrame.current = requestAnimationFrame(update);
       }
       if (e.code === "KeyR") respawn();
+      if (e.key === "z") {
+        respawnMiddle();
+      }
     };
     const onKeyUp = (e) => {
       if (e.code === "Space") {
@@ -69,7 +83,7 @@ function Ball() {
       window.removeEventListener("keyup", onKeyUp);
       cancelAnimationFrame(animFrame.current);
     };
-  }, [launch, respawn]);
+  }, [launch, respawn, respawnMiddle]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -83,7 +97,7 @@ function Ball() {
     <RigidBody
       ref={ref}
       colliders="ball"
-      restitution={0.6}
+      restitution={0.2}
       friction={0.5}
       linearDamping={0.2}
       angularDamping={0.4}

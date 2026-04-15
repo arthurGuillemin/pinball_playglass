@@ -23,9 +23,16 @@ const CURVE_NODES = [
   "COL_CURVE_cave_up_middle",
   "COL_CURVE_cave_down_L",
   "COL_CURVE_circle",
+  "COL_CURVE_wall_block_L",
+  "COL_CURVE_wall_block_R.001",
 ];
 
-const BUMPER_NODES = ["COL_bumper_01", "COL_bumper_02", "COL_bumper_03"];
+const BUMPER_NODES = [
+  "COL_bumper_01",
+  "COL_bumper_02",
+  "COL_bumper_03",
+  "COL_bumper_04",
+];
 
 const defaultMat = new MeshStandardMaterial({ color: "#aaaaaa", side: 2 });
 
@@ -86,6 +93,7 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
           friction={0.5}
         />
       )}
+
       {STATIC_WALL_NODES.map((name) => {
         const node = nodes[name];
         if (!node) return null;
@@ -93,6 +101,7 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
           <StaticMesh key={name} node={node} restitution={0.3} friction={0.5} />
         );
       })}
+
       {CURVE_NODES.map((name) => {
         const node = nodes[name];
         if (!node) return null;
@@ -100,6 +109,7 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
           <StaticMesh key={name} node={node} restitution={0.5} friction={0.3} />
         );
       })}
+
       {["COL_SLING_slingshot_R", "COL_SLING_slingshot_L"].map((name) => {
         const node = nodes[name];
         if (!node) return null;
@@ -107,6 +117,7 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
           <SlingshotMesh key={name} node={node} onContact={onSlingshotHit} />
         );
       })}
+
       {BUMPER_NODES.map((name) => {
         const node = nodes[name];
         if (!node) return null;

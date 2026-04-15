@@ -21,7 +21,7 @@ const Flipper = forwardRef(
     return (
       <RigidBody
         ref={ref}
-        type="kinematicPosition"
+        type="kinematicVelocity"
         colliders="cuboid"
         restitution={1.2}
         position={position || defaultPosition}
