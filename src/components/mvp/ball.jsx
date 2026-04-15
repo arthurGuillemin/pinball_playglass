@@ -3,7 +3,7 @@ import { useRef, useEffect, useCallback } from "react";
 
 const MAX_CHARGE_TIME = 1500;
 const MAX_VELOCITY = 4;
-const SPAWN = { x: 0.34, y: 0.03, z: 0.78 };
+const SPAWN = { x: 0.41, y: 0.03, z: 0.78 };
 
 function Ball() {
   const ref = useRef(null);
@@ -90,7 +90,7 @@ function Ball() {
       position={[SPAWN.x, SPAWN.y, SPAWN.z]}
     >
       <mesh castShadow>
-        <sphereGeometry args={[0.025, 32, 32]} />
+        <sphereGeometry args={[0.02, 32, 32]} />
         <meshStandardMaterial color="#e0e0e0" metalness={0.9} roughness={0.1} />
       </mesh>
     </RigidBody>
