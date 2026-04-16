@@ -1,5 +1,5 @@
 import { useGLTF } from "@react-three/drei";
-import { RigidBody, MeshCollider } from "@react-three/rapier";
+import { RigidBody, MeshCollider, CuboidCollider } from "@react-three/rapier";
 import { MeshStandardMaterial } from "three";
 
 const STATIC_WALL_NODES = [
@@ -43,6 +43,23 @@ const BUMPER_NODES = [
 ];
 
 const defaultMat = new MeshStandardMaterial({ color: "#aaaaaa", side: 2 });
+
+function FloorCollider() {
+  return (
+    <RigidBody type="fixed" colliders={false} position={[0, -0.024, 0]}>
+      <CuboidCollider
+        args={[0.45, 0.025, 0.82]}
+        friction={0.5}
+        restitution={0.3}
+      />
+
+      <mesh receiveShadow>
+        <boxGeometry args={[0.9, 0.05, 1.64]} />
+        <meshStandardMaterial color="#555" roughness={0.8} metalness={0.1} />
+      </mesh>
+    </RigidBody>
+  );
+}
 
 function StaticMesh({ node, restitution = 0.3, friction = 0.4, onContact }) {
   return (
@@ -118,13 +135,7 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
 
   return (
     <group>
-      {nodes["COL_floor"] && (
-        <StaticMesh
-          node={nodes["COL_floor"]}
-          restitution={0.3}
-          friction={0.5}
-        />
-      )}
+      <FloorCollider />
 
       {STATIC_WALL_NODES.map((name) => {
         const node = nodes[name];

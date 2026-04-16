@@ -185,7 +185,7 @@ export default function App() {
 
         <StatsPanel />
 
-        <Physics gravity={[0, -9.81, 0]} debug={true}>
+        <Physics gravity={[0, -9.81, 0]} debug={false}>
           <group rotation={[TILT_X, FLIP_Y, 0]}>
             <Suspense fallback={null}>
               <PinballTable
