@@ -10,12 +10,7 @@ import ControlsHint from "./components/ControlsHint";
 import StatsPanel from "./utils/stats.js";
 
 const env = import.meta.env.VITE_ENV;
-let debugState;
-if (env === "dev") {
-  debugState = true;
-} else {
-  debugState = false;
-}
+const debugState = env === "dev";
 
 export default function App() {
   const {
@@ -27,8 +22,16 @@ export default function App() {
     right2Rot,
     activeFlippers,
   } = useFlipperControls();
-  const { score, charging, chargeLevel, onBumperHit, onSlingshotHit } =
-    useGameState();
+
+  const {
+    score,
+    charging,
+    chargeLevel,
+    groupStates,
+    onSensorHit,
+    onBumperHit,
+    onSlingshotHit,
+  } = useGameState();
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
@@ -48,7 +51,9 @@ export default function App() {
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
+
         {debugState && <StatsPanel />}
+
         <Suspense fallback={null}>
           <PinballScene
             rightRef={rightRef}
@@ -60,8 +65,11 @@ export default function App() {
             activeFlippers={activeFlippers}
             onBumperHit={onBumperHit}
             onSlingshotHit={onSlingshotHit}
+            groupStates={groupStates}
+            onSensorHit={onSensorHit}
           />
         </Suspense>
+
         <OrbitControls makeDefault target={[0, 0, 0]} />
       </Canvas>
     </div>
