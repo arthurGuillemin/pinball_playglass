@@ -5,7 +5,7 @@ import { PinballTable } from "./PinballTable";
 import { FlipperStaticWalls } from "./FlipperStaticWalls";
 import FlipperMesh from "./FlipperMesh";
 import { FlipperAnimator } from "./FlipperAnimator";
-import Ball from "./Ball";
+import Ball from "./Ball.jsx";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
 
 const env = import.meta.env.VITE_ENV;
