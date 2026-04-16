@@ -10,8 +10,8 @@ const StatsPanel = () => {
     stats.showPanel(0); // 0: FPS
 
     stats.dom.style.position = "absolute";
-    stats.dom.style.top = "0px";
-    stats.dom.style.left = "0px";
+    stats.dom.style.top = "30px";
+    stats.dom.style.left = "10px";
 
     document.body.appendChild(stats.dom);
     statsRef.current = stats;
@@ -23,7 +23,6 @@ const StatsPanel = () => {
 
   useFrame(() => {
     if (!statsRef.current) return;
-
     statsRef.current.begin();
     statsRef.current.end();
   });

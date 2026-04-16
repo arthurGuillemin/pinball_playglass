@@ -3,7 +3,7 @@ import { useRef, useEffect, useCallback } from "react";
 
 const MAX_CHARGE_TIME = 1500;
 const MAX_VELOCITY = 4;
-const SPAWN = { x: 0.41, y: 0.03, z: 0.78 };
+const SPAWN = { x: 0.38, y: 0.03, z: 0.76 };
 const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 }; //spawn de debug
 
 function Ball() {
