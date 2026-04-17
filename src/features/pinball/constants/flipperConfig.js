@@ -17,10 +17,10 @@ export const FLIP_Y = Math.PI;
 
 export const FLIPPER_CONFIG = {
   left: { nodeName: "COL_flipper_L", pivotWorld: [-0.18, -0.075, 0.66] },
-  right: { nodeName: "COL_flipper_R", pivotWorld: [0.12, -0.075, 0.66] },
+  right: { nodeName: "COL_flipper_R", pivotWorld: [0.116, -0.075, 0.662] },
   right2: {
     nodeName: "COL_flipper_R001",
-    pivotWorld: [0.33, -0.05, 0.0033942],
+    pivotWorld: [0.33, -0.02, 0.0033942],
   },
 };
 

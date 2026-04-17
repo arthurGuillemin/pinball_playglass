@@ -1,6 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
+import * as THREE from "three";
 import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
 import { useGameState } from "./features/pinball/hooks/useGameState";
@@ -8,6 +9,8 @@ import ScoreDisplay from "./components/ScoreDisplay";
 import ChargeBar from "./components/ChargeBar";
 import ControlsHint from "./components/ControlsHint";
 import StatsPanel from "./utils/stats.js";
+import CameraDebugger from "./utils/CameraDebugger.js";
+import CameraIntro from "./features/camera/intro.jsx";
 
 const env = import.meta.env.VITE_ENV;
 let debugState;
@@ -30,6 +33,7 @@ export default function App() {
   const { score, charging, chargeLevel, onBumperHit, onSlingshotHit } =
     useGameState();
 
+  const [cameraIntro, setCameraIntro] = useState(true);
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
       <ScoreDisplay score={score} />
@@ -40,6 +44,11 @@ export default function App() {
         shadows
         camera={{ position: [0, 3, 2.5], fov: 45, near: 0.01, far: 100 }}
       >
+        <CameraIntro
+          active={cameraIntro}
+          onFinish={() => setCameraIntro(false)}
+        />
+        <CameraDebugger />
         <ambientLight intensity={0.5} />
         <directionalLight
           position={[0.5, 4, 1]}
@@ -62,7 +71,7 @@ export default function App() {
             onSlingshotHit={onSlingshotHit}
           />
         </Suspense>
-        <OrbitControls makeDefault target={[0, 0, 0]} />
+        {!cameraIntro && <OrbitControls makeDefault target={[0, 0, 0]} />}
       </Canvas>
     </div>
   );
