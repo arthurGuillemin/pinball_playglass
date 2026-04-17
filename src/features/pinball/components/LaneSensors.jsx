@@ -5,84 +5,82 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { LANE_GROUPS } from "../hooks/useLaneGroups";
 
-const COLOR_OFF = new THREE.Color("#220044");
-const COLOR_ON = new THREE.Color("#cc44ff");
-const COLOR_COMPLETED = new THREE.Color("#ffffff");
+const COLOR_DIM = new THREE.Color("#3a2000");
+const COLOR_ON = new THREE.Color("#ffaa00");
+const COLOR_COMPLETED = new THREE.Color("#fff5cc");
 
-function LedMesh({ ledNode, isLit, groupDone }) {
+function LedMesh({ node, isLit, groupDone }) {
   const matRef = useRef();
+  const lightRef = useRef();
 
   useFrame(() => {
-    if (!matRef.current) return;
+    if (!matRef.current || !lightRef.current) return;
+
     if (groupDone) {
+      const pulse = 1.5 + Math.sin(Date.now() * 0.005) * 0.3;
       matRef.current.emissive.set(COLOR_COMPLETED);
-      matRef.current.emissiveIntensity = 3 + Math.sin(Date.now() * 0.003);
+      matRef.current.emissiveIntensity = pulse;
+      lightRef.current.intensity = 0.08;
+      lightRef.current.color.set(COLOR_COMPLETED);
     } else if (isLit) {
       matRef.current.emissive.set(COLOR_ON);
-      matRef.current.emissiveIntensity = 6;
+      matRef.current.emissiveIntensity = 1.8;
+      lightRef.current.intensity = 0.06;
+      lightRef.current.color.set(COLOR_ON);
     } else {
-      matRef.current.emissive.set(COLOR_ON);
-      matRef.current.emissiveIntensity = 0.15;
+      matRef.current.emissive.set(COLOR_DIM);
+      matRef.current.emissiveIntensity = 0.4;
+      lightRef.current.intensity = 0;
     }
   });
 
-  if (!ledNode) return null;
-
-  const childMesh = ledNode.children?.[0];
-  if (!childMesh?.geometry) return null;
+  if (!node?.geometry) return null;
 
   return (
     <group
-      position={ledNode.position}
-      quaternion={ledNode.quaternion}
-      scale={ledNode.scale}
+      position={node.position}
+      quaternion={node.quaternion}
+      scale={node.scale}
     >
-      <mesh
-        geometry={childMesh.geometry}
-        position={childMesh.position}
-        quaternion={childMesh.quaternion}
-        scale={childMesh.scale}
-      >
+      <mesh geometry={node.geometry}>
         <meshStandardMaterial
           ref={matRef}
-          color={COLOR_OFF}
-          emissive={COLOR_ON}
-          emissiveIntensity={0.15}
+          color="#1a0d00"
+          emissive={COLOR_DIM}
+          emissiveIntensity={0.4}
+          roughness={0.3}
+          metalness={0.1}
           toneMapped={false}
         />
       </mesh>
+      <pointLight
+        ref={lightRef}
+        intensity={0}
+        color={COLOR_ON}
+        distance={0.08}
+        decay={2}
+      />
     </group>
   );
 }
 
 export function LaneSensors({ groupStates, onSensorHit }) {
-  const { nodes, scene } = useGLTF("/pinball.glb");
+  const { nodes } = useGLTF("/pinball.glb");
 
-  // Diagnostic au montage — useEffect évite l'accès au ref pendant le render
   useEffect(() => {
-    console.group("[LaneSensors] Diagnostic au montage");
+    console.group("[LaneSensors] Diagnostic");
     LANE_GROUPS.forEach((group) => {
-      console.log(`Groupe: ${group.id}`);
+      console.log(`▸ Groupe "${group.id}"`);
       group.lanes.forEach(({ sensor, led }, i) => {
         const sNode = nodes[sensor];
-        const ledNode = scene.getObjectByName(led);
+        const ledNode = nodes[led];
+        console.log(`  [${i}] SENSOR: ${sensor}`, sNode ? "✅" : "❌ ABSENT");
         console.log(
-          `  Lane ${i} | SENSOR: ${sensor}`,
-          sNode ? "✅" : "❌ ABSENT",
+          `  [${i}] LED:    ${led}`,
+          ledNode?.geometry ? "✅" : "❌ pas de geometry",
         );
-        console.log(
-          `  Lane ${i} | LED:    ${led}`,
-          ledNode ? "✅" : "❌ ABSENT",
-        );
-        if (ledNode) {
-          console.log(
-            `    children:`,
-            ledNode.children?.map((c) => `${c.name} (geo:${!!c.geometry})`),
-          );
-        }
       });
     });
-    console.log("groupStates reçu:", groupStates);
     console.groupEnd();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -95,7 +93,7 @@ export function LaneSensors({ groupStates, onSensorHit }) {
 
         return group.lanes.map(({ sensor, led }, laneIndex) => {
           const sNode = nodes[sensor];
-          const ledNode = scene.getObjectByName(led);
+          const ledNode = nodes[led];
           const isLit = leds[laneIndex] ?? false;
 
           const p = sNode?.position ?? new THREE.Vector3();
@@ -108,10 +106,7 @@ export function LaneSensors({ groupStates, onSensorHit }) {
                   type="fixed"
                   sensor={true}
                   onIntersectionEnter={() => {
-                    console.log(
-                      `[SENSOR HIT] ${sensor} → group:${group.id} lane:${laneIndex} | avant:`,
-                      groupStates[group.id],
-                    );
+                    console.log(`[HIT] ${sensor} → ${group.id}[${laneIndex}]`);
                     onSensorHit(group.id, laneIndex);
                   }}
                 >
@@ -122,7 +117,7 @@ export function LaneSensors({ groupStates, onSensorHit }) {
                 </RigidBody>
               )}
 
-              <LedMesh ledNode={ledNode} isLit={isLit} groupDone={groupDone} />
+              <LedMesh node={ledNode} isLit={isLit} groupDone={groupDone} />
             </group>
           );
         });

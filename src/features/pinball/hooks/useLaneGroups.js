@@ -1,19 +1,16 @@
 import { useState, useCallback } from "react";
 
 /**
- * Définition des groupes de lanes.
- * Chaque groupe a :
- *  - id        : identifiant unique
- *  - bonus     : points accordés quand toutes les LEDs sont allumées
- *  - lanes     : liste des lanes du groupe, chacune avec son sensor et sa LED GLB
+ * Groupes de lanes lus depuis le GLB pinball_refonte.glb
  *
- * Convention de nommage Blender :
- *   SENSOR_<groupe>_<index>
- *   LED_<groupe>_<index>
+ * Groupes détectés :
+ *  - lanes_right  : 2 lanes (SENSOR/LED _lane_right_1 et _2)
+ *  - lanes_left   : 2 lanes (SENSOR/LED _lane_left_1 et _2)
+ *  - lane_rampe   : 1 sensor/led (passage de rampe, groupe solo)
+ *  - luncher      : sensor de sortie du lanceur (pas de LED associée)
  *
- * Pour ajouter un groupe :
- *   1. Crée les nodes dans Blender avec le bon préfixe
- *   2. Ajoute une entrée ici
+ * Un groupe est "complété" quand toutes ses LEDs sont allumées.
+ * Les LEDs restent allumées une fois activées (pas de reset automatique).
  */
 export const LANE_GROUPS = [
   {
@@ -24,66 +21,42 @@ export const LANE_GROUPS = [
       { sensor: "SENSOR_lane_right_2", led: "LED_lane_right_2" },
     ],
   },
-  // Décommente quand tu as créé les nodes dans Blender :
-  // {
-  //   id: "lanes_left",
-  //   bonus: 5000,
-  //   lanes: [
-  //     { sensor: "SENSOR_lane_left_1", led: "LED_lane_left_1" },
-  //     { sensor: "SENSOR_lane_left_2", led: "LED_lane_left_2" },
-  //   ],
-  // },
-  // {
-  //   id: "bumpers_group",
-  //   bonus: 10000,
-  //   lanes: [
-  //     { sensor: "SENSOR_bumper_1", led: "LED_bumper_1" },
-  //     { sensor: "SENSOR_bumper_2", led: "LED_bumper_2" },
-  //     { sensor: "SENSOR_bumper_3", led: "LED_bumper_3" },
-  //   ],
-  // },
+  {
+    id: "lanes_left",
+    bonus: 5000,
+    lanes: [
+      { sensor: "SENSOR_lane_left_1", led: "LED_lane_left_1" },
+      { sensor: "SENSOR_lane_left_2", led: "LED_lane_left_2" },
+    ],
+  },
+  {
+    id: "lane_rampe",
+    bonus: 3000,
+    lanes: [{ sensor: "SENSOR_lane_rampe", led: "LED_lane_rampe" }],
+  },
+  // SENSOR_luncher n'a pas de LED associée dans le GLB — à brancher séparément si besoin
 ];
 
-/**
- * État initial : toutes les LEDs éteintes pour chaque groupe.
- * Structure : { lanes_right: [false, false], bumpers_group: [false, false, false], ... }
- */
 function buildInitialState() {
   return Object.fromEntries(
     LANE_GROUPS.map((g) => [g.id, g.lanes.map(() => false)]),
   );
 }
 
-/**
- * useLaneGroups
- *
- * Gère l'état allumé/éteint de chaque LED par groupe.
- * - Une LED s'allume quand la balle passe sur son sensor → elle reste allumée.
- * - Quand toutes les LEDs d'un groupe sont allumées → bonus de points + les LEDs
- *   restent allumées (le groupe est "complété").
- * - Un groupe complété ne peut plus être re-déclenché (les LEDs sont "locked").
- */
 export function useLaneGroups(onBonus) {
   const [groupStates, setGroupStates] = useState(buildInitialState);
 
-  /**
-   * Appelé par LaneSensors quand la balle passe sur un sensor.
-   * @param {string} groupId  - ex: "lanes_right"
-   * @param {number} laneIndex - index dans le tableau lanes du groupe
-   */
   const onSensorHit = useCallback(
     (groupId, laneIndex) => {
       setGroupStates((prev) => {
         const group = LANE_GROUPS.find((g) => g.id === groupId);
         const current = [...prev[groupId]];
 
-        // Déjà complété → ignore
-        if (current.every(Boolean)) return prev;
+        // Déjà allumée ou groupe complété → ignore
+        if (current[laneIndex]) return prev;
 
-        // Allume la LED
         current[laneIndex] = true;
 
-        // Vérifie si le groupe est maintenant complet
         if (current.every(Boolean)) {
           onBonus?.(group.bonus);
         }

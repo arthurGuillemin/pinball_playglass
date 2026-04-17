@@ -9,11 +9,12 @@ const STATIC_WALL_NODES = [
   "COL_wall_04",
   "COL_wall_down_R",
   "COL_wall_down_L",
-  "COL_wall_mini_down_R",
   "COL_luncher_L",
   "COL_luncher_L_up",
-  "COL_fork_mini_R_left",
-  "COL_fork_mini_R_right",
+  "COL_down_flipper_L",
+  "COL_down_flipper_R",
+  "COL_fork_mini_L_mid",
+  "COL_fork_mini_R_mid",
 ];
 
 const CURVE_NODES = [
@@ -29,7 +30,6 @@ const CURVE_NODES = [
   "COL_CURVE_flipper_down_courbe_L",
 ];
 
-// Nodes avec scale non-1 → hull obligatoire
 const HULL_NODES = ["COL_CURVE_wall_block_L"];
 
 const BUMPER_NODES = [
@@ -40,6 +40,9 @@ const BUMPER_NODES = [
   "COL_mini_bumper_01",
   "COL_mini_bumper_02",
   "COL_mini_bumper_03",
+  "COL_micro_bumper_01",
+  "COL_micro_bumper_02",
+  "COL_micro_bumper_03",
 ];
 
 const defaultMat = new MeshStandardMaterial({ color: "#aaaaaa", side: 2 });
@@ -52,7 +55,6 @@ function FloorCollider() {
         friction={0.5}
         restitution={0.3}
       />
-
       <mesh receiveShadow>
         <boxGeometry args={[0.9, 0.05, 1.64]} />
         <meshStandardMaterial color="#555" roughness={0.8} metalness={0.1} />
