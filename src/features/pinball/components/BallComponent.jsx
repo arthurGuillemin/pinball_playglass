@@ -4,8 +4,11 @@ import { useRef, useEffect, useCallback } from "react";
 const MAX_CHARGE_TIME = 1500;
 const MAX_VELOCITY = 4;
 const SPAWN = { x: 0.38, y: 0.03, z: 0.76 };
-const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 }; //spawn de debug
-//j'ajoute ce commentaire pour commit le chagement de majuscule dans le fochier sinon je peut pas commit :(
+const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 };
+
+// Impulsion appliquée par le boost rampe
+const BOOST_IMPULSE = { x: -0.3, y: 0.15, z: -2.5 };
+
 function Ball() {
   const ref = useRef(null);
   const chargeStart = useRef(null);
@@ -49,6 +52,24 @@ function Ball() {
   }, []);
 
   useEffect(() => {
+    const onBoost = () => {
+      if (!ref.current) return;
+      const vel = ref.current.linvel();
+      ref.current.setLinvel(
+        {
+          x: vel.x + BOOST_IMPULSE.x,
+          y: vel.y + BOOST_IMPULSE.y,
+          z: vel.z + BOOST_IMPULSE.z,
+        },
+        true,
+      );
+      console.log("[BOOST] impulsion appliquée", BOOST_IMPULSE);
+    };
+    window.addEventListener("ball-boost", onBoost);
+    return () => window.removeEventListener("ball-boost", onBoost);
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (e) => {
       if (e.code === "Space" && !e.repeat) {
         e.preventDefault();
@@ -66,9 +87,7 @@ function Ball() {
         animFrame.current = requestAnimationFrame(update);
       }
       if (e.code === "KeyR") respawn();
-      if (e.key === "z") {
-        respawnMiddle();
-      }
+      if (e.key === "z") respawnMiddle();
     };
     const onKeyUp = (e) => {
       if (e.code === "Space") {

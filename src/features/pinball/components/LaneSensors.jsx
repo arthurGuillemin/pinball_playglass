@@ -5,12 +5,13 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { LANE_GROUPS } from "../hooks/useLaneGroups";
 
-const GLB = "/pinball.glb?v=3";
+const GLB = "/pinball.glb?v=4";
 
 const COLOR_DIM = new THREE.Color("#3a2000");
 const COLOR_ON = new THREE.Color("#ffaa00");
 const COLOR_COMPLETED = new THREE.Color("#fff5cc");
 
+// ─── LED visuelle ─────────────────────────────────────────────────────────────
 function LedMesh({ node, isLit, groupDone }) {
   const matRef = useRef();
   const lightRef = useRef();
@@ -65,7 +66,29 @@ function LedMesh({ node, isLit, groupDone }) {
   );
 }
 
-export function LaneSensors({ groupStates, onSensorHit }) {
+// ─── Sensor boost (invisible, pas de LED) ────────────────────────────────────
+function BoostSensor({ node, onBoostHit }) {
+  if (!node) return null;
+
+  const p = node.position ?? new THREE.Vector3();
+  const s = node.scale ?? new THREE.Vector3(0.012, 0.012, 0.012);
+
+  return (
+    <RigidBody
+      type="fixed"
+      sensor={true}
+      onIntersectionEnter={() => {
+        console.log("[BOOST] SENSOR_boost déclenché");
+        onBoostHit();
+      }}
+    >
+      <CuboidCollider args={[s.x, s.y, s.z]} position={[p.x, p.y, p.z]} />
+    </RigidBody>
+  );
+}
+
+// ─── Composant principal ──────────────────────────────────────────────────────
+export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
   const { nodes } = useGLTF(GLB);
 
   useEffect(() => {
@@ -82,12 +105,16 @@ export function LaneSensors({ groupStates, onSensorHit }) {
         );
       });
     });
+    const boostNodes = Object.keys(nodes).filter((n) =>
+      n.startsWith("SENSOR_boost"),
+    );
+    console.log(`▸ SENSOR_boost* (${boostNodes.length})`, boostNodes);
     console.groupEnd();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <>
+      {/* Lanes + LEDs */}
       {LANE_GROUPS.map((group) => {
         const leds = groupStates[group.id] ?? [];
         const groupDone = leds.length > 0 && leds.every(Boolean);
@@ -122,6 +149,12 @@ export function LaneSensors({ groupStates, onSensorHit }) {
           );
         });
       })}
+
+      {Object.keys(nodes)
+        .filter((name) => name.startsWith("SENSOR_boost"))
+        .map((name) => (
+          <BoostSensor key={name} node={nodes[name]} onBoostHit={onBoostHit} />
+        ))}
     </>
   );
 }

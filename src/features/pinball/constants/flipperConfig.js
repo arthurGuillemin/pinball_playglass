@@ -18,14 +18,15 @@ export const FLIP_Y = Math.PI;
 export const FLIPPER_CONFIG = {
   left: {
     nodeName: "COL_flipper_L",
-    pivotWorld: [-0.18, -0.075, 0.66],
+    pivotWorld: [-0.17, -0.075, 0.66],
+    meshRotationY: 0,
   },
   right: {
     nodeName: "COL_flipper_R",
-    pivotWorld: [0.1, -0.075, 0.665],
+    pivotWorld: [0.1, -0.075, 0.66],
+    meshRotationY: 0,
   },
   right2: {
-    // COL_flipper_R_up = mini flipper (translation: [-0.339, 0, -0.1246])
     nodeName: "COL_flipper_R_up",
     pivotWorld: [0.33, -0.05, 0.1246],
   },

@@ -23,6 +23,7 @@ export function PinballScene({
   onSlingshotHit,
   groupStates,
   onSensorHit,
+  onBoostHit,
 }) {
   return (
     <Physics gravity={[0, -9.81, 0]} debug={debugState}>
@@ -35,7 +36,11 @@ export function PinballScene({
           <FlipperStaticWalls side="left" />
           <FlipperStaticWalls side="right" />
           <FlipperStaticWalls side="right2" />
-          <LaneSensors groupStates={groupStates} onSensorHit={onSensorHit} />
+          <LaneSensors
+            groupStates={groupStates}
+            onSensorHit={onSensorHit}
+            onBoostHit={onBoostHit}
+          />
         </Suspense>
       </group>
 

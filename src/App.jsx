@@ -29,6 +29,7 @@ export default function App() {
     chargeLevel,
     groupStates,
     onSensorHit,
+    onBoostHit,
     onBumperHit,
     onSlingshotHit,
   } = useGameState();
@@ -67,6 +68,7 @@ export default function App() {
             onSlingshotHit={onSlingshotHit}
             groupStates={groupStates}
             onSensorHit={onSensorHit}
+            onBoostHit={onBoostHit}
           />
         </Suspense>
 
