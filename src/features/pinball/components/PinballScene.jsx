@@ -1,16 +1,20 @@
 import { Suspense } from "react";
 import { Physics } from "@react-three/rapier";
+import { OrbitControls } from "@react-three/drei";
 import { PinballTable } from "./PinballTable";
 import { FlipperStaticWalls } from "./FlipperStaticWalls";
 import FlipperMesh from "./FlipperMesh";
 import { FlipperAnimator } from "./FlipperAnimator";
-import { LaneSensors } from "./LaneSensors";
 import Ball from "./BallComponent";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
 
 const env = import.meta.env.VITE_ENV;
-const debugState = env === "dev";
-
+let debugState;
+if (env === "dev") {
+  debugState = true;
+} else {
+  debugState = false;
+}
 export function PinballScene({
   rightRef,
   leftRef,
@@ -21,8 +25,6 @@ export function PinballScene({
   activeFlippers,
   onBumperHit,
   onSlingshotHit,
-  groupStates,
-  onSensorHit,
 }) {
   return (
     <Physics gravity={[0, -9.81, 0]} debug={debugState}>
@@ -35,7 +37,6 @@ export function PinballScene({
           <FlipperStaticWalls side="left" />
           <FlipperStaticWalls side="right" />
           <FlipperStaticWalls side="right2" />
-          <LaneSensors groupStates={groupStates} onSensorHit={onSensorHit} />
         </Suspense>
       </group>
 
