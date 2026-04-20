@@ -1,9 +1,20 @@
 import { useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { useGameState } from "../pinball/hooks/useGameState";
+
+const START_POS = new THREE.Vector3(-0.0429, -0.0497, 0.786);
+
+const TARGET_POS = new THREE.Vector3(
+  -0.0031482368870522606,
+  1.6802378199245809,
+  1.2681252268760064,
+);
+const TARGET_LOOK = new THREE.Vector3(0, 0, 0);
 
 function CameraIntro({ active, onFinish }) {
   const { camera } = useThree();
+  const { startGame } = useGameState();
 
   const curve = useRef(
     new THREE.CatmullRomCurve3([
@@ -20,23 +31,28 @@ function CameraIntro({ active, onFinish }) {
 
   const t = useRef(0);
   const phase = useRef(0);
+  const started = useRef(false);
   const finished = useRef(false);
-  const speed = 0.002;
 
-  const targetPos = new THREE.Vector3(
-    -0.0031482368870522606,
-    1.6802378199245809,
-    1.2681252268760064,
-  );
-  const targetLook = new THREE.Vector3(0, 0, 0);
+  useEffect(() => {
+    camera.position.copy(START_POS);
+    camera.lookAt(curve.current.getTangent(0));
+  }, [camera]);
 
   useEffect(() => {
     const handleKey = (e) => {
-      if (e.key.toLowerCase() === "s" && active && !finished.current) {
-        // snap direct à la fin
-        camera.position.copy(targetPos);
-        camera.lookAt(targetLook);
+      const key = e.key.toLowerCase();
 
+      if (key === "t" && !started.current) {
+        console.log("r");
+        startGame("Player1");
+        started.current = true;
+        phase.current = 1;
+      }
+
+      if (key === "s" && active && !finished.current) {
+        camera.position.copy(TARGET_POS);
+        camera.lookAt(TARGET_LOOK);
         finished.current = true;
         onFinish?.();
       }
@@ -44,29 +60,30 @@ function CameraIntro({ active, onFinish }) {
 
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [active, camera, onFinish]);
+  }, [active, camera, onFinish, startGame]);
 
   useFrame(() => {
-    if (!active || finished.current) return;
+    if (!active || finished.current || phase.current === 0) return;
 
-    if (phase.current === 0) {
-      t.current += speed;
+    if (phase.current === 1) {
+      t.current += 0.002;
 
       if (t.current >= 1) {
         t.current = 1;
-        phase.current = 1;
+        phase.current = 2;
       }
 
       const point = curve.current.getPoint(t.current);
       const tangent = curve.current.getTangent(t.current);
-
       camera.position.copy(point);
       camera.lookAt(point.clone().add(tangent));
-    } else if (phase.current === 1) {
-      camera.position.lerp(targetPos, 0.05);
-      camera.lookAt(targetLook);
+    }
 
-      if (camera.position.distanceTo(targetPos) < 0.01) {
+    if (phase.current === 2) {
+      camera.position.lerp(TARGET_POS, 0.05);
+      camera.lookAt(TARGET_LOOK);
+
+      if (camera.position.distanceTo(TARGET_POS) < 0.01) {
         finished.current = true;
         onFinish?.();
       }

@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import * as THREE from "three";
 import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
-import { useGameState } from "./features/pinball/hooks/useGameState";
+import { useGame } from "./features/pinball/context/GameContext.jsx";
 import ScoreDisplay from "./components/ScoreDisplay";
 import ChargeBar from "./components/ChargeBar";
 import ControlsHint from "./components/ControlsHint";
@@ -22,6 +22,15 @@ if (env === "dev") {
 
 export default function App() {
   const {
+    score,
+    balls,
+    isRunning,
+    charging,
+    chargeLevel,
+    onBumperHit,
+    onSlingshotHit,
+  } = useGame();
+  const {
     rightRef,
     leftRef,
     right2Ref,
@@ -30,10 +39,9 @@ export default function App() {
     right2Rot,
     activeFlippers,
   } = useFlipperControls();
-  const { score, charging, chargeLevel, onBumperHit, onSlingshotHit } =
-    useGameState();
 
   const [cameraIntro, setCameraIntro] = useState(true);
+
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
       <ScoreDisplay score={score} />
@@ -45,7 +53,7 @@ export default function App() {
         camera={{ position: [0, 3, 2.5], fov: 45, near: 0.01, far: 100 }}
       >
         <CameraIntro
-          active={cameraIntro}
+          active={isRunning}
           onFinish={() => setCameraIntro(false)}
         />
         <CameraDebugger />
