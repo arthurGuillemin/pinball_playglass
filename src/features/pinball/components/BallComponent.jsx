@@ -4,7 +4,7 @@ import { useRef, useEffect, useCallback } from "react";
 const MAX_CHARGE_TIME = 1500;
 const MAX_VELOCITY = 4;
 const SPAWN = { x: 0.38, y: 0.03, z: 0.76 };
-const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 }; //spawn de debug
+const MiddleSpawn = { x: 0.02, y: 0.03, z: 0.0001 }; //spawn de debug
 //j'ajoute ce commentaire pour commit le chagement de majuscule dans le fochier sinon je peut pas commit :(
 function Ball() {
   const ref = useRef(null);
