@@ -1,12 +1,14 @@
 import { RigidBody } from "@react-three/rapier";
 import { useRef, useEffect, useCallback } from "react";
+import { useGame } from "../context/GameContext";
 
 const MAX_CHARGE_TIME = 1500;
 const MAX_VELOCITY = 4;
 const SPAWN = { x: 0.38, y: 0.03, z: 0.76 };
-const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 }; //spawn de debug
-//j'ajoute ce commentaire pour commit le chagement de majuscule dans le fochier sinon je peut pas commit :(
+const MiddleSpawn = { x: 0.02, y: 0.03, z: 0.0001 };
+
 function Ball() {
+  const { onBallLost } = useGame();
   const ref = useRef(null);
   const chargeStart = useRef(null);
   const animFrame = useRef(null);
@@ -25,7 +27,8 @@ function Ball() {
     cancelAnimationFrame(animFrame.current);
     chargeStart.current = null;
     emitCharge(false);
-  }, []);
+    onBallLost?.();
+  }, [onBallLost]);
 
   const respawnMiddle = useCallback(() => {
     if (!ref.current) return;
@@ -66,9 +69,7 @@ function Ball() {
         animFrame.current = requestAnimationFrame(update);
       }
       if (e.code === "KeyR") respawn();
-      if (e.key === "z") {
-        respawnMiddle();
-      }
+      if (e.key === "z") respawnMiddle();
     };
     const onKeyUp = (e) => {
       if (e.code === "Space") {
