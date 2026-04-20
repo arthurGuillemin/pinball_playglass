@@ -2,6 +2,8 @@ import { useGLTF } from "@react-three/drei";
 import { RigidBody, MeshCollider, CuboidCollider } from "@react-three/rapier";
 import { MeshStandardMaterial } from "three";
 
+const GLB = "/pinball.glb?v=3";
+
 const STATIC_WALL_NODES = [
   "COL_wall_01",
   "COL_wall_02",
@@ -121,9 +123,13 @@ function SlingshotMesh({ node, onContact }) {
       onCollisionEnter={onContact}
     >
       <MeshCollider type="trimesh">
+        {/* position + quaternion appliqués pour respecter la rotation Blender (7°) */}
         <mesh
           geometry={node.geometry}
           material={node.material ?? defaultMat}
+          position={node.position}
+          quaternion={node.quaternion}
+          scale={node.scale}
           castShadow
           receiveShadow
         />
@@ -133,7 +139,7 @@ function SlingshotMesh({ node, onContact }) {
 }
 
 export function PinballTable({ onBumperHit, onSlingshotHit }) {
-  const { nodes } = useGLTF("/pinball.glb");
+  const { nodes } = useGLTF(GLB);
 
   return (
     <group>
@@ -188,4 +194,4 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
   );
 }
 
-useGLTF.preload("/pinball.glb");
+useGLTF.preload(GLB);
