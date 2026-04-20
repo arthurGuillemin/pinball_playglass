@@ -7,7 +7,7 @@ import FlipperMesh from "./FlipperMesh";
 import { FlipperAnimator } from "./FlipperAnimator";
 import Ball from "./BallComponent";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
-
+import { LaneSensors } from "./LaneSensors";
 const env = import.meta.env.VITE_ENV;
 let debugState;
 if (env === "dev") {

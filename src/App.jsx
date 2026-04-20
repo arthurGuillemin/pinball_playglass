@@ -1,28 +1,18 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Suspense, useState } from "react";
-import * as THREE from "three";
 import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
-import { useGame } from "./features/pinball/context/GameContext.jsx";
 import ScoreDisplay from "./components/ScoreDisplay";
 import ChargeBar from "./components/ChargeBar";
 import ControlsHint from "./components/ControlsHint";
 import StatsPanel from "./utils/stats.js";
 import CameraDebugger from "./utils/CameraDebugger.js";
 import CameraIntro from "./features/camera/intro.jsx";
-import {
-  useGameState,
-  isRunning,
-} from "./features/pinball/hooks/useGameState.js";
+import { useGameState } from "./features/pinball/hooks/useGameState.js";
 
 const env = import.meta.env.VITE_ENV;
-let debugState;
-if (env === "dev") {
-  debugState = true;
-} else {
-  debugState = false;
-}
+const debugState = env === "dev";
 
 export default function App() {
   const {
@@ -37,6 +27,7 @@ export default function App() {
 
   const {
     score,
+    isRunning,
     charging,
     chargeLevel,
     groupStates,
@@ -44,6 +35,7 @@ export default function App() {
     onBoostHit,
     onBumperHit,
     onSlingshotHit,
+    onBallLost,
   } = useGameState();
 
   const [cameraIntro, setCameraIntro] = useState(true);
@@ -62,7 +54,9 @@ export default function App() {
           active={isRunning}
           onFinish={() => setCameraIntro(false)}
         />
+
         <CameraDebugger />
+
         <ambientLight intensity={0.5} />
         <directionalLight
           position={[0.5, 4, 1]}
@@ -71,7 +65,9 @@ export default function App() {
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
+
         {debugState && <StatsPanel />}
+
         <Suspense fallback={null}>
           <PinballScene
             rightRef={rightRef}
@@ -84,8 +80,12 @@ export default function App() {
             onBumperHit={onBumperHit}
             onSlingshotHit={onSlingshotHit}
             onBoostHit={onBoostHit}
+            onSensorHit={onSensorHit}
+            groupStates={groupStates}
+            onBallLost={onBallLost}
           />
         </Suspense>
+
         {!cameraIntro && <OrbitControls makeDefault target={[0, 0, 0]} />}
       </Canvas>
     </div>
