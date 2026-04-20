@@ -1,13 +1,16 @@
 import { useEffect, useRef } from "react";
 import Stats from "stats.js";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 
 const StatsPanel = () => {
   const statsRef = useRef(null);
+  const { gl } = useThree();
 
   useEffect(() => {
     const stats = new Stats();
-    stats.showPanel(0); // 0: FPS
+
+    // 0: FPS, 1: MS, 2: MB
+    stats.showPanel(0);
 
     stats.dom.style.position = "absolute";
     stats.dom.style.top = "30px";
@@ -23,7 +26,12 @@ const StatsPanel = () => {
 
   useFrame(() => {
     if (!statsRef.current) return;
+
+    // Début mesure FPS
     statsRef.current.begin();
+    const drawCalls = gl.info.render.calls;
+    console.log("Draw calls:", drawCalls);
+    gl.info.reset();
     statsRef.current.end();
   });
 

@@ -6,7 +6,6 @@ const MAX_VELOCITY = 4;
 const SPAWN = { x: 0.38, y: 0.03, z: 0.76 };
 const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 };
 
-// Impulsion appliquée par le boost rampe
 const BOOST_IMPULSE = { x: -0.3, y: 0.15, z: -2.5 };
 
 function Ball() {

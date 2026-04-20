@@ -1,7 +1,7 @@
 import { Quaternion, Euler } from "three";
 
 export const ANGLE_ACTIVE = (50 * Math.PI) / 180;
-export const SLERP = 0.3;
+export const SLERP = 0.6;
 
 export const ROTATIONS = {
   baseRight: new Quaternion().setFromEuler(new Euler(0, 0, 0)),
