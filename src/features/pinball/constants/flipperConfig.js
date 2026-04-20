@@ -28,6 +28,7 @@ export const FLIPPER_CONFIG = {
     // COL_flipper_R_up = mini flipper (translation: [-0.339, 0, -0.1246])
     nodeName: "COL_flipper_R_up",
     pivotWorld: [0.33, -0.05, 0.1246],
+
   },
 };
 
