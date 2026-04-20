@@ -3,8 +3,10 @@ import { useGLTF } from "@react-three/drei";
 import { RigidBody, MeshCollider } from "@react-three/rapier";
 import { FLIPPER_CONFIG, TILT_X, FLIP_Y } from "../constants/flipperConfig";
 
+const GLB = "/pinball.glb?v=3";
+
 const FlipperMesh = forwardRef(({ side = "right" }, ref) => {
-  const { nodes } = useGLTF("/pinball.glb");
+  const { nodes } = useGLTF(GLB);
   const { nodeName, pivotWorld } = FLIPPER_CONFIG[side];
   const node = nodes[nodeName];
 
@@ -38,4 +40,4 @@ const FlipperMesh = forwardRef(({ side = "right" }, ref) => {
 FlipperMesh.displayName = "FlipperMesh";
 export default FlipperMesh;
 
-useGLTF.preload("/pinball.glb");
+useGLTF.preload(GLB);

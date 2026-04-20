@@ -5,6 +5,8 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { LANE_GROUPS } from "../hooks/useLaneGroups";
 
+const GLB = "/pinball.glb?v=3";
+
 const COLOR_DIM = new THREE.Color("#3a2000");
 const COLOR_ON = new THREE.Color("#ffaa00");
 const COLOR_COMPLETED = new THREE.Color("#fff5cc");
@@ -15,7 +17,6 @@ function LedMesh({ node, isLit, groupDone }) {
 
   useFrame(() => {
     if (!matRef.current || !lightRef.current) return;
-
     if (groupDone) {
       const pulse = 1.5 + Math.sin(Date.now() * 0.005) * 0.3;
       matRef.current.emissive.set(COLOR_COMPLETED);
@@ -65,7 +66,7 @@ function LedMesh({ node, isLit, groupDone }) {
 }
 
 export function LaneSensors({ groupStates, onSensorHit }) {
-  const { nodes } = useGLTF("/pinball.glb");
+  const { nodes } = useGLTF(GLB);
 
   useEffect(() => {
     console.group("[LaneSensors] Diagnostic");
@@ -74,7 +75,7 @@ export function LaneSensors({ groupStates, onSensorHit }) {
       group.lanes.forEach(({ sensor, led }, i) => {
         const sNode = nodes[sensor];
         const ledNode = nodes[led];
-        console.log(`  [${i}] SENSOR: ${sensor}`, sNode ? "✅" : "❌ ABSENT");
+        console.log(`  [${i}] SENSOR: ${sensor}`, sNode ? "✅" : "❌");
         console.log(
           `  [${i}] LED:    ${led}`,
           ledNode?.geometry ? "✅" : "❌ pas de geometry",
@@ -116,7 +117,6 @@ export function LaneSensors({ groupStates, onSensorHit }) {
                   />
                 </RigidBody>
               )}
-
               <LedMesh node={ledNode} isLit={isLit} groupDone={groupDone} />
             </group>
           );
@@ -125,3 +125,5 @@ export function LaneSensors({ groupStates, onSensorHit }) {
     </>
   );
 }
+
+useGLTF.preload(GLB);

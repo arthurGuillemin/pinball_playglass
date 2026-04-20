@@ -2,12 +2,15 @@ import { useGLTF } from "@react-three/drei";
 import { RigidBody, MeshCollider } from "@react-three/rapier";
 import { FLIPPER_STATIC_NODES } from "../constants/flipperConfig";
 
+const GLB = "/pinball.glb?v=3";
+
 export function FlipperStaticWalls({ side = "right" }) {
-  const { nodes } = useGLTF("/pinball.glb");
+  const { nodes } = useGLTF(GLB);
+  const nodeNames = FLIPPER_STATIC_NODES[side] ?? [];
 
   return (
     <group>
-      {FLIPPER_STATIC_NODES[side].map((name) => {
+      {nodeNames.map((name) => {
         const node = nodes[name];
         if (!node) return null;
         return (
@@ -35,3 +38,5 @@ export function FlipperStaticWalls({ side = "right" }) {
     </group>
   );
 }
+
+useGLTF.preload(GLB);
