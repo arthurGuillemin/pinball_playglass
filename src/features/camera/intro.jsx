@@ -1,10 +1,9 @@
 import { useRef, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { useGameState } from "../pinball/hooks/useGameState";
+import { useGame } from "../pinball/context/GameContext";
 
 const START_POS = new THREE.Vector3(-0.0429, -0.0497, 0.786);
-
 const TARGET_POS = new THREE.Vector3(
   -0.0031482368870522606,
   1.6802378199245809,
@@ -14,7 +13,7 @@ const TARGET_LOOK = new THREE.Vector3(0, 0, 0);
 
 function CameraIntro({ active, onFinish }) {
   const { camera } = useThree();
-  const { startGame } = useGameState();
+  const { isRunning, startGame } = useGame(); // ✅
 
   const curve = useRef(
     new THREE.CatmullRomCurve3([
@@ -33,6 +32,7 @@ function CameraIntro({ active, onFinish }) {
   const phase = useRef(0);
   const started = useRef(false);
   const finished = useRef(false);
+  const previousIsRunning = useRef(false);
 
   useEffect(() => {
     camera.position.copy(START_POS);
@@ -40,11 +40,30 @@ function CameraIntro({ active, onFinish }) {
   }, [camera]);
 
   useEffect(() => {
+    if (!isRunning && previousIsRunning.current) {
+      t.current = 0;
+      phase.current = 0;
+      started.current = false;
+      finished.current = false;
+      camera.position.copy(START_POS);
+      camera.lookAt(curve.current.getTangent(0));
+    }
+
+    if (isRunning && !previousIsRunning.current && !started.current) {
+      console.log("🎮 Intro démarrée via WebSocket (backglass)");
+      started.current = true;
+      phase.current = 1;
+    }
+
+    previousIsRunning.current = isRunning;
+  }, [isRunning, camera]);
+
+  useEffect(() => {
     const handleKey = (e) => {
       const key = e.key.toLowerCase();
 
       if (key === "t" && !started.current) {
-        console.log("r");
+        console.log("🔧 Dev : touche T");
         startGame("Player1");
         started.current = true;
         phase.current = 1;
@@ -67,12 +86,10 @@ function CameraIntro({ active, onFinish }) {
 
     if (phase.current === 1) {
       t.current += 0.002;
-
       if (t.current >= 1) {
         t.current = 1;
         phase.current = 2;
       }
-
       const point = curve.current.getPoint(t.current);
       const tangent = curve.current.getTangent(t.current);
       camera.position.copy(point);
@@ -82,7 +99,6 @@ function CameraIntro({ active, onFinish }) {
     if (phase.current === 2) {
       camera.position.lerp(TARGET_POS, 0.05);
       camera.lookAt(TARGET_LOOK);
-
       if (camera.position.distanceTo(TARGET_POS) < 0.01) {
         finished.current = true;
         onFinish?.();
