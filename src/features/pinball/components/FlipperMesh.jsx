@@ -20,11 +20,10 @@ const FlipperMesh = forwardRef(({ side = "right" }, ref) => {
       ref={ref}
       type="kinematicPosition"
       colliders={false}
-      restitution={2}
-      friction={0.1}
+      // restitution ICI est ignorée par Rapier pour kinematic
       position={pivotWorld}
     >
-      <MeshCollider type="hull">
+      <MeshCollider type="hull" restitution={2} friction={0.1}>
         <mesh
           geometry={node.geometry}
           material={node.material}

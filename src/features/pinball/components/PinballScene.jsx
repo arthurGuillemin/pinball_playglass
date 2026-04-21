@@ -30,7 +30,12 @@ export function PinballScene({
   onBoostHit,
 }) {
   return (
-    <Physics gravity={[0, -9.81, 0]} debug={debugState}>
+    <Physics
+      gravity={[0, -9.81, 0]}
+      debug={debugState}
+      timeStep={1 / 120}
+      numSolverIterations={8}
+    >
       <group rotation={[TILT_X, FLIP_Y, 0]}>
         <Suspense fallback={null}>
           <PinballTable

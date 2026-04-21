@@ -53,7 +53,7 @@ function FloorCollider() {
   return (
     <RigidBody type="fixed" colliders={false} position={[0, -0.024, 0]}>
       <CuboidCollider
-        args={[0.45, 0.025, 0.82]}
+        args={[0.45, 0.04, 0.82]}
         friction={0.5}
         restitution={0.3}
       />

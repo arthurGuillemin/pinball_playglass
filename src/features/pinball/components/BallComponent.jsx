@@ -122,6 +122,8 @@ function Ball() {
       friction={0.5}
       linearDamping={0.2}
       angularDamping={0.4}
+      ccd={true}
+      mass={1}
       position={[SPAWN.x, SPAWN.y, SPAWN.z]}
     >
       <mesh castShadow>
