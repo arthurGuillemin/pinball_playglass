@@ -4,12 +4,27 @@ import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { LANE_GROUPS } from "../hooks/useLaneGroups";
+import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
 
 const GLB = "/pinball.glb?v=4";
 
 const COLOR_DIM = new THREE.Color("#3a2000");
 const COLOR_ON = new THREE.Color("#ffaa00");
 const COLOR_COMPLETED = new THREE.Color("#fff5cc");
+
+// Quaternion du groupe parent — appliqué sur positions ET rotations
+const GROUP_EULER = new THREE.Euler(TILT_X, FLIP_Y, 0, "XYZ");
+const GROUP_QUAT = new THREE.Quaternion().setFromEuler(GROUP_EULER);
+
+// Position GLB (espace Blender) → world-space
+function toWorldPos(nodePosition) {
+  return nodePosition.clone().applyQuaternion(GROUP_QUAT);
+}
+
+// Quaternion GLB → world-space (groupe * local)
+function toWorldQuat(nodeQuaternion) {
+  return GROUP_QUAT.clone().multiply(nodeQuaternion);
+}
 
 // ─── LED visuelle ─────────────────────────────────────────────────────────────
 function LedMesh({ node, isLit, groupDone }) {
@@ -38,12 +53,12 @@ function LedMesh({ node, isLit, groupDone }) {
 
   if (!node?.geometry) return null;
 
+  // Applique la transformation du groupe sur position + quaternion
+  const worldPos = toWorldPos(node.position.clone());
+  const worldQuat = toWorldQuat(node.quaternion.clone());
+
   return (
-    <group
-      position={node.position}
-      quaternion={node.quaternion}
-      scale={node.scale}
-    >
+    <group position={worldPos} quaternion={worldQuat} scale={node.scale}>
       <mesh geometry={node.geometry}>
         <meshStandardMaterial
           ref={matRef}
@@ -66,55 +81,31 @@ function LedMesh({ node, isLit, groupDone }) {
   );
 }
 
-// ─── Sensor boost (invisible, pas de LED) ────────────────────────────────────
-function BoostSensor({ node, onBoostHit }) {
-  if (!node) return null;
-
-  const p = node.position ?? new THREE.Vector3();
-  const s = node.scale ?? new THREE.Vector3(0.012, 0.012, 0.012);
-
-  return (
-    <RigidBody
-      type="fixed"
-      sensor={true}
-      onIntersectionEnter={() => {
-        console.log("[BOOST] SENSOR_boost déclenché");
-        onBoostHit();
-      }}
-    >
-      <CuboidCollider args={[s.x, s.y, s.z]} position={[p.x, p.y, p.z]} />
-    </RigidBody>
-  );
-}
-
 // ─── Composant principal ──────────────────────────────────────────────────────
 export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
   const { nodes } = useGLTF(GLB);
 
   useEffect(() => {
-    console.group("[LaneSensors] Diagnostic");
+    if (import.meta.env.VITE_ENV !== "dev") return;
+    console.group("[LaneSensors] positions world-space");
     LANE_GROUPS.forEach((group) => {
-      console.log(`▸ Groupe "${group.id}"`);
-      group.lanes.forEach(({ sensor, led }, i) => {
-        const sNode = nodes[sensor];
-        const ledNode = nodes[led];
-        console.log(`  [${i}] SENSOR: ${sensor}`, sNode ? "✅" : "❌");
+      group.lanes.forEach(({ sensor }) => {
+        const n = nodes[sensor];
+        if (!n) {
+          console.warn(`❌ ${sensor} introuvable`);
+          return;
+        }
+        const wp = toWorldPos(n.position.clone());
         console.log(
-          `  [${i}] LED:    ${led}`,
-          ledNode?.geometry ? "✅" : "❌ pas de geometry",
+          `${sensor} → [${wp.x.toFixed(3)}, ${wp.y.toFixed(3)}, ${wp.z.toFixed(3)}]`,
         );
       });
     });
-    const boostNodes = Object.keys(nodes).filter((n) =>
-      n.startsWith("SENSOR_boost"),
-    );
-    console.log(`▸ SENSOR_boost* (${boostNodes.length})`, boostNodes);
     console.groupEnd();
-  }, []);
+  }, [nodes]);
 
   return (
     <>
-      {/* Lanes + LEDs */}
       {LANE_GROUPS.map((group) => {
         const leds = groupStates[group.id] ?? [];
         const groupDone = leds.length > 0 && leds.every(Boolean);
@@ -124,8 +115,10 @@ export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
           const ledNode = nodes[led];
           const isLit = leds[laneIndex] ?? false;
 
-          const p = sNode?.position ?? new THREE.Vector3();
-          const s = sNode?.scale ?? new THREE.Vector3(0.012, 0.012, 0.012);
+          const worldPos = sNode
+            ? toWorldPos(sNode.position.clone())
+            : new THREE.Vector3();
+          const half = (sNode?.scale?.x ?? 0.0124) * 1.5;
 
           return (
             <group key={sensor}>
@@ -139,8 +132,8 @@ export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
                   }}
                 >
                   <CuboidCollider
-                    args={[s.x, s.y, s.z]}
-                    position={[p.x, p.y, p.z]}
+                    args={[half, half, half]}
+                    position={[worldPos.x, worldPos.y, worldPos.z]}
                   />
                 </RigidBody>
               )}
@@ -152,9 +145,28 @@ export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
 
       {Object.keys(nodes)
         .filter((name) => name.startsWith("SENSOR_boost"))
-        .map((name) => (
-          <BoostSensor key={name} node={nodes[name]} onBoostHit={onBoostHit} />
-        ))}
+        .map((name) => {
+          const n = nodes[name];
+          if (!n) return null;
+          const worldPos = toWorldPos(n.position.clone());
+          const half = (n.scale?.x ?? 0.0124) * 1.5;
+          return (
+            <RigidBody
+              key={name}
+              type="fixed"
+              sensor={true}
+              onIntersectionEnter={() => {
+                console.log("[BOOST] déclenché");
+                onBoostHit();
+              }}
+            >
+              <CuboidCollider
+                args={[half, half, half]}
+                position={[worldPos.x, worldPos.y, worldPos.z]}
+              />
+            </RigidBody>
+          );
+        })}
     </>
   );
 }
