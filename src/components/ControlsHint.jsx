@@ -14,7 +14,8 @@ export default function ControlsHint() {
       }}
     >
       ← Flipper G &nbsp;|&nbsp; Flipper D → &nbsp;|&nbsp; [Espace] Lancer
-      &nbsp;|&nbsp; [R] Respawn
+      &nbsp;|&nbsp; [R] Respawn &nbsp;|&nbsp; [Z] respanMidle &nbsp;|&nbsp; [T]
+      commencer
     </div>
   );
 }
