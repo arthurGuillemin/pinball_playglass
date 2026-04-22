@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLaneGroups } from "./useLaneGroups";
 import socketService from "../../../services/socket.service";
+import { useAnnexQuest } from "./useAnnexQuest";
 
 const BOOST_DURATION_MS = 2500; // durée du boost en ms
 
@@ -12,6 +13,13 @@ export function useGameState() {
   const [chargeLevel, setChargeLevel] = useState(0);
   const [boosted, setBoosted] = useState(false);
   const boostTimer = useRef(null);
+  const {
+    cardHits,
+    cardsRaised,
+    phase: annexPhase,
+    onCardHit,
+    onQuestLost,
+  } = useAnnexQuest((pts) => setScore((s) => s + pts));
 
   useEffect(() => {
     socketService.connect();
@@ -76,5 +84,10 @@ export function useGameState() {
     onSlingshotHit,
     startGame,
     onBallLost,
+    cardHits,
+    cardsRaised,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
   };
 }

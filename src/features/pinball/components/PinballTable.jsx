@@ -2,7 +2,7 @@ import { useGLTF } from "@react-three/drei";
 import { RigidBody, MeshCollider, CuboidCollider } from "@react-three/rapier";
 import { MeshStandardMaterial } from "three";
 
-const GLB = "/pinball.glb?v=3";
+const GLB = "/pinball.glb";
 
 const STATIC_WALL_NODES = [
   "COL_wall_01",

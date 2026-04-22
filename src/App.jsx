@@ -36,6 +36,11 @@ export default function App() {
     onBumperHit,
     onSlingshotHit,
     onBallLost,
+    cardHits,
+    cardsRaised,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
   } = useGameState();
 
   const [cameraIntro, setCameraIntro] = useState(true);
@@ -83,6 +88,11 @@ export default function App() {
             onSensorHit={onSensorHit}
             groupStates={groupStates}
             onBallLost={onBallLost}
+            cardHits={cardHits}
+            cardsRaised={cardsRaised}
+            annexPhase={annexPhase}
+            onCardHit={onCardHit}
+            onQuestLost={onQuestLost}
           />
         </Suspense>
 
