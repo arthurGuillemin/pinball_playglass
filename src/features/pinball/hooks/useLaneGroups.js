@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 
+// Groupes du plateau principal uniquement — les cards annexe sont gérées par AnnexZone
 export const LANE_GROUPS = [
   {
     id: "lanes_right",
@@ -34,6 +35,11 @@ export const LANE_GROUPS = [
   },
 ];
 
+// State des cards annexe séparé
+const ANNEX_CARD_COUNT = 4;
+const ANNEX_BONUS_PHASE1 = 500;
+const ANNEX_BONUS_PHASE2 = 1500;
+
 function buildInitialState() {
   return Object.fromEntries(
     LANE_GROUPS.map((g) => [g.id, g.lanes.map(() => false)]),
@@ -42,26 +48,58 @@ function buildInitialState() {
 
 export function useLaneGroups(onBonus) {
   const [groupStates, setGroupStates] = useState(buildInitialState);
+  const [cardStates, setCardStates] = useState(
+    Array(ANNEX_CARD_COUNT).fill(false),
+  );
+  const [annexPhase, setAnnexPhase] = useState(1);
 
   const onSensorHit = useCallback(
     (groupId, laneIndex) => {
       setGroupStates((prev) => {
         const group = LANE_GROUPS.find((g) => g.id === groupId);
         const current = [...prev[groupId]];
-
         if (current[laneIndex]) return prev;
-
         current[laneIndex] = true;
-
-        if (current.every(Boolean)) {
-          onBonus?.(group.bonus);
-        }
-
+        if (current.every(Boolean)) onBonus?.(group.bonus);
         return { ...prev, [groupId]: current };
       });
     },
     [onBonus],
   );
 
-  return { groupStates, onSensorHit };
+  const onCardHit = useCallback(
+    (cardIndex) => {
+      setCardStates((prev) => {
+        if (prev[cardIndex]) return prev;
+        const next = [...prev];
+        next[cardIndex] = true;
+        const allHit = next.every(Boolean);
+        if (allHit) {
+          const bonus =
+            annexPhase === 1 ? ANNEX_BONUS_PHASE1 : ANNEX_BONUS_PHASE2;
+          onBonus?.(bonus);
+          setTimeout(() => {
+            setCardStates(Array(ANNEX_CARD_COUNT).fill(false));
+            setAnnexPhase((p) => (p === 1 ? 2 : 1));
+          }, 900);
+        }
+        return next;
+      });
+    },
+    [onBonus, annexPhase],
+  );
+
+  const onQuestLost = useCallback(() => {
+    setCardStates(Array(ANNEX_CARD_COUNT).fill(false));
+    setAnnexPhase(1);
+  }, []);
+
+  return {
+    groupStates,
+    onSensorHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
+  };
 }

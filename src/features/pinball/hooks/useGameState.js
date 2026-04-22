@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLaneGroups } from "./useLaneGroups";
 import socketService from "../../../services/socket.service";
-import { useAnnexQuest } from "./useAnnexQuest";
 
-const BOOST_DURATION_MS = 2500; // durée du boost en ms
+const BOOST_DURATION_MS = 2500;
 
 export function useGameState() {
   const [score, setScore] = useState(0);
@@ -13,13 +12,6 @@ export function useGameState() {
   const [chargeLevel, setChargeLevel] = useState(0);
   const [boosted, setBoosted] = useState(false);
   const boostTimer = useRef(null);
-  const {
-    cardHits,
-    cardsRaised,
-    phase: annexPhase,
-    onCardHit,
-    onQuestLost,
-  } = useAnnexQuest((pts) => setScore((s) => s + pts));
 
   useEffect(() => {
     socketService.connect();
@@ -45,19 +37,28 @@ export function useGameState() {
     };
   }, []);
 
-  const onBumperHit = useCallback(() => {
-    socketService.send("hit", { points: 100 });
-  }, []);
-
-  const onSlingshotHit = useCallback(() => {
-    socketService.send("hit", { points: 50 });
-  }, []);
-
-  const startGame = useCallback((playerName) => {
-    socketService.send("start_game", { playerName });
-  }, []);
   const onBonus = useCallback((points) => setScore((s) => s + points), []);
-  const { groupStates, onSensorHit } = useLaneGroups(onBonus);
+  const {
+    groupStates,
+    onSensorHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
+  } = useLaneGroups(onBonus);
+
+  const onBumperHit = useCallback(
+    () => socketService.send("hit", { points: 100 }),
+    [],
+  );
+  const onSlingshotHit = useCallback(
+    () => socketService.send("hit", { points: 50 }),
+    [],
+  );
+  const startGame = useCallback(
+    (playerName) => socketService.send("start_game", { playerName }),
+    [],
+  );
 
   const onBoostHit = useCallback(() => {
     setBoosted(true);
@@ -66,9 +67,7 @@ export function useGameState() {
     boostTimer.current = setTimeout(() => setBoosted(false), BOOST_DURATION_MS);
   }, []);
 
-  const onBallLost = useCallback(() => {
-    socketService.send("ball_lost");
-  }, []);
+  const onBallLost = useCallback(() => socketService.send("ball_lost"), []);
 
   return {
     score,
@@ -79,15 +78,14 @@ export function useGameState() {
     boosted,
     groupStates,
     onSensorHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
     onBoostHit,
     onBumperHit,
     onSlingshotHit,
     startGame,
     onBallLost,
-    cardHits,
-    cardsRaised,
-    annexPhase,
-    onCardHit,
-    onQuestLost,
   };
 }

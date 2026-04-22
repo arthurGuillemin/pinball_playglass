@@ -32,15 +32,14 @@ export default function App() {
     chargeLevel,
     groupStates,
     onSensorHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
     onBoostHit,
     onBumperHit,
     onSlingshotHit,
     onBallLost,
-    cardHits,
-    cardsRaised,
-    annexPhase,
-    onCardHit,
-    onQuestLost,
   } = useGameState();
 
   const [cameraIntro, setCameraIntro] = useState(true);
@@ -50,7 +49,6 @@ export default function App() {
       <ScoreDisplay score={score} />
       <ChargeBar charging={charging} chargeLevel={chargeLevel} />
       <ControlsHint />
-
       <Canvas
         shadows
         camera={{ position: [0, 3, 2.5], fov: 45, near: 0.01, far: 100 }}
@@ -59,9 +57,7 @@ export default function App() {
           active={isRunning}
           onFinish={() => setCameraIntro(false)}
         />
-
         <CameraDebugger />
-
         <ambientLight intensity={0.5} />
         <directionalLight
           position={[0.5, 4, 1]}
@@ -70,9 +66,7 @@ export default function App() {
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
         />
-
         {debugState && <StatsPanel />}
-
         <Suspense fallback={null}>
           <PinballScene
             rightRef={rightRef}
@@ -85,17 +79,15 @@ export default function App() {
             onBumperHit={onBumperHit}
             onSlingshotHit={onSlingshotHit}
             onBoostHit={onBoostHit}
-            onSensorHit={onSensorHit}
-            groupStates={groupStates}
             onBallLost={onBallLost}
-            cardHits={cardHits}
-            cardsRaised={cardsRaised}
+            groupStates={groupStates}
+            onSensorHit={onSensorHit}
+            cardStates={cardStates}
             annexPhase={annexPhase}
             onCardHit={onCardHit}
             onQuestLost={onQuestLost}
           />
         </Suspense>
-
         {!cameraIntro && <OrbitControls makeDefault target={[0, 0, 0]} />}
       </Canvas>
     </div>

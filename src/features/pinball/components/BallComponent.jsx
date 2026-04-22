@@ -5,6 +5,8 @@ import { useGame } from "../context/GameContext";
 const MAX_CHARGE_TIME = 1500;
 const MAX_VELOCITY = 4;
 const SPAWN = { x: 0.38, y: 0.03, z: 0.76 };
+// spawn sur la partie annexe const SPAWN = { x: 0.08, y: 1.51, z: -1.4884 };
+
 const MiddleSpawn = { x: 0.1, y: 0.03, z: 0.0001 };
 
 const BOOST_IMPULSE = { x: -0.3, y: 0.15, z: -2.5 };

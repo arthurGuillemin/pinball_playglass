@@ -26,8 +26,8 @@ export function PinballScene({
   groupStates,
   onSensorHit,
   onBoostHit,
-  cardHits,
-  cardsRaised,
+  onBallLost,
+  cardStates,
   annexPhase,
   onCardHit,
   onQuestLost,
@@ -49,9 +49,8 @@ export function PinballScene({
           <FlipperStaticWalls side="right" />
           <FlipperStaticWalls side="right2" />
           <AnnexZone
-            cardHits={cardHits}
-            cardsRaised={cardsRaised}
-            phase={annexPhase}
+            cardStates={cardStates}
+            annexPhase={annexPhase}
             onCardHit={onCardHit}
             onQuestLost={onQuestLost}
           />
