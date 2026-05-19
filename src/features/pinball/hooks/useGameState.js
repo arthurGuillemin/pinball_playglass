@@ -11,54 +11,74 @@ export function useGameState() {
   const [charging, setCharging] = useState(false);
   const [chargeLevel, setChargeLevel] = useState(0);
   const [boosted, setBoosted] = useState(false);
+  const [lightsActivated, setLightsActivated] = useState([]);
   const boostTimer = useRef(null);
+  const isConnected = useRef(false);
 
   useEffect(() => {
+    if (isConnected.current) return;
+
+    isConnected.current = true;
     socketService.connect();
+
     socketService.onScreenMessage((data) => {
       if (data.type === "state_update") {
         setScore(data.state.score);
         setBalls(data.state.balls);
         setIsRunning(data.state.isRunning);
+        setLightsActivated(data.state.lightsActivated || []);
       }
       if (data.type === "game_over") {
         setScore(data.state.score);
         setIsRunning(false);
+        setLightsActivated([]);
       }
     });
+
     const onCharge = (e) => {
       setCharging(e.detail.charging);
       setChargeLevel(e.detail.level);
     };
+
     window.addEventListener("ball-charge", onCharge);
+
     return () => {
       window.removeEventListener("ball-charge", onCharge);
-      socketService.disconnect();
     };
   }, []);
 
   const onBonus = useCallback((points) => setScore((s) => s + points), []);
+
   const {
     groupStates,
-    onSensorHit,
+    onSensorHit: onSensorHitInternal,
     cardStates,
     annexPhase,
     onCardHit,
     onQuestLost,
   } = useLaneGroups(onBonus);
 
-  const onBumperHit = useCallback(
-    () => socketService.send("hit", { points: 100 }),
-    [],
+  const onSensorHit = useCallback(
+    (sensorId) => {
+      socketService.send("light_sensor", { sensorId });
+      console.log(sensorId);
+      onSensorHitInternal(sensorId);
+    },
+    [onSensorHitInternal],
   );
-  const onSlingshotHit = useCallback(
-    () => socketService.send("hit", { points: 50 }),
-    [],
-  );
-  const startGame = useCallback(
-    (playerName) => socketService.send("start_game", { playerName }),
-    [],
-  );
+
+  const onBumperHit = useCallback(() => {
+    socketService.send("bumper_hit");
+    console.log("bumper touché hit envoiyé");
+  }, []);
+
+  const onSlingshotHit = useCallback(() => {
+    socketService.send("slingshot_hit");
+  }, []);
+
+  const startGame = useCallback((playerName) => {
+    socketService.send("start_game", { playerName });
+  }, []);
 
   const onBoostHit = useCallback(() => {
     setBoosted(true);
@@ -67,7 +87,9 @@ export function useGameState() {
     boostTimer.current = setTimeout(() => setBoosted(false), BOOST_DURATION_MS);
   }, []);
 
-  const onBallLost = useCallback(() => socketService.send("ball_lost"), []);
+  const onBallLost = useCallback(() => {
+    socketService.send("ball_lost");
+  }, []);
 
   return {
     score,
@@ -76,6 +98,7 @@ export function useGameState() {
     charging,
     chargeLevel,
     boosted,
+    lightsActivated,
     groupStates,
     onSensorHit,
     cardStates,
