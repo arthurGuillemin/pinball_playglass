@@ -3,13 +3,13 @@ import { OrbitControls } from "@react-three/drei";
 import { Suspense, useState } from "react";
 import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
-import ScoreDisplay from "./components/ScoreDisplay";
-import ChargeBar from "./components/ChargeBar";
-import ControlsHint from "./components/ControlsHint";
+import { useGameState } from "./features/pinball/hooks/useGameState.js";
+import ScoreDisplay from "./features/pinball/components/ui/ScoreDisplay";
+import ChargeBar from "./features/pinball/components/ui/ChargeBar";
+import ControlsHint from "./features/pinball/components/ui/ControlsHint";
 import StatsPanel from "./utils/stats.js";
 import CameraDebugger from "./utils/CameraDebugger.js";
 import CameraIntro from "./features/camera/intro.jsx";
-import { useGameState } from "./features/pinball/hooks/useGameState.js";
 
 const env = import.meta.env.VITE_ENV;
 const debugState = env === "dev";

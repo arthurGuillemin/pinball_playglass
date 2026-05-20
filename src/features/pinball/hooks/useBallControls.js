@@ -1,0 +1,117 @@
+import { useRef, useEffect, useCallback } from "react";
+import { useGame } from "../context/GameContext";
+import {
+  MAX_CHARGE_TIME,
+  MAX_VELOCITY,
+  SPAWN,
+  DEBUG_SPAWN,
+  FALL_THRESHOLD_Y,
+  BOOST_IMPULSE,
+} from "../constants/ballConfig";
+
+function emitCharge(charging, level = 0) {
+  window.dispatchEvent(
+    new CustomEvent("ball-charge", { detail: { charging, level } }),
+  );
+}
+
+export function useBallControls(ref) {
+  const { onBallLost } = useGame();
+  const chargeStart = useRef(null);
+  const animFrame = useRef(null);
+
+  const respawn = useCallback(() => {
+    if (!ref.current) return;
+    ref.current.setTranslation(SPAWN, true);
+    ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    cancelAnimationFrame(animFrame.current);
+    chargeStart.current = null;
+    emitCharge(false);
+    onBallLost?.();
+  }, [ref, onBallLost]);
+
+  const respawnMiddle = useCallback(() => {
+    if (!ref.current) return;
+    ref.current.setTranslation(DEBUG_SPAWN, true);
+    ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+    ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+    cancelAnimationFrame(animFrame.current);
+    chargeStart.current = null;
+    emitCharge(false);
+  }, [ref]);
+
+  const launch = useCallback(() => {
+    if (!ref.current || chargeStart.current === null) return;
+    const elapsed = Date.now() - chargeStart.current;
+    const ratio = Math.min(elapsed / MAX_CHARGE_TIME, 1);
+    const speed = 0.5 + ratio * (MAX_VELOCITY - 0.5);
+    ref.current.setLinvel({ x: 0, y: 0, z: -speed }, true);
+    cancelAnimationFrame(animFrame.current);
+    chargeStart.current = null;
+    emitCharge(false);
+  }, [ref]);
+
+  // Boost impulsion depuis les lane sensors
+  useEffect(() => {
+    const onBoost = () => {
+      if (!ref.current) return;
+      const vel = ref.current.linvel();
+      ref.current.setLinvel(
+        {
+          x: vel.x + BOOST_IMPULSE.x,
+          y: vel.y + BOOST_IMPULSE.y,
+          z: vel.z + BOOST_IMPULSE.z,
+        },
+        true,
+      );
+    };
+    window.addEventListener("ball-boost", onBoost);
+    return () => window.removeEventListener("ball-boost", onBoost);
+  }, [ref]);
+
+  // Clavier : espace (charge/lancer), R (respawn), Z (debug spawn)
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.code === "Space" && !e.repeat) {
+        e.preventDefault();
+        chargeStart.current = Date.now();
+        emitCharge(true, 0);
+        const update = () => {
+          if (chargeStart.current === null) return;
+          const level = Math.min(
+            (Date.now() - chargeStart.current) / MAX_CHARGE_TIME,
+            1,
+          );
+          emitCharge(true, level);
+          animFrame.current = requestAnimationFrame(update);
+        };
+        animFrame.current = requestAnimationFrame(update);
+      }
+      if (e.code === "KeyR") respawn();
+      if (e.key === "z") respawnMiddle();
+    };
+    const onKeyUp = (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        launch();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      cancelAnimationFrame(animFrame.current);
+    };
+  }, [launch, respawn, respawnMiddle]);
+
+  // Détection chute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!ref.current) return;
+      if (ref.current.translation().y < FALL_THRESHOLD_Y) respawn();
+    }, 500);
+    return () => clearInterval(interval);
+  }, [ref, respawn]);
+}

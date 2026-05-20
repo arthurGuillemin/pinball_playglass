@@ -5,11 +5,12 @@ export const STATIC_WALL_NODES = [
   "COL_wall_04",
   "COL_wall_down_R",
   "COL_wall_down_L",
-  "COL_wall_mini_down_R",
   "COL_luncher_L",
   "COL_luncher_L_up",
-  "COL_fork_mini_R_left",
-  "COL_fork_mini_R_right",
+  "COL_down_flipper_L",
+  "COL_down_flipper_R",
+  "COL_fork_mini_L_mid",
+  "COL_fork_mini_R_mid",
 ];
 
 export const CURVE_NODES = [
@@ -36,6 +37,9 @@ export const BUMPER_NODES = [
   "COL_mini_bumper_01",
   "COL_mini_bumper_02",
   "COL_mini_bumper_03",
+  "COL_micro_bumper_01",
+  "COL_micro_bumper_02",
+  "COL_micro_bumper_03",
 ];
 
 export const SLINGSHOT_NODES = [
