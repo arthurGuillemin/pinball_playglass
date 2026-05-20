@@ -3,7 +3,7 @@ import { OrbitControls } from "@react-three/drei";
 import { Suspense, useState } from "react";
 import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
-import { useGameState } from "./features/pinball/hooks/useGameState.js";
+import { useGame } from "./features/pinball/context/GameContext";
 import ScoreDisplay from "./features/pinball/components/ui/ScoreDisplay";
 import ChargeBar from "./features/pinball/components/ui/ChargeBar";
 import ControlsHint from "./features/pinball/components/ui/ControlsHint";
@@ -25,18 +25,7 @@ export default function App() {
     activeFlippers,
   } = useFlipperControls();
 
-  const {
-    score,
-    isRunning,
-    charging,
-    chargeLevel,
-    groupStates,
-    onSensorHit,
-    onBoostHit,
-    onBumperHit,
-    onSlingshotHit,
-    onBallLost,
-  } = useGameState();
+  const { score, isRunning, charging, chargeLevel } = useGame();
 
   const [cameraIntro, setCameraIntro] = useState(true);
 
@@ -77,12 +66,6 @@ export default function App() {
             leftRot={leftRot}
             right2Rot={right2Rot}
             activeFlippers={activeFlippers}
-            onBumperHit={onBumperHit}
-            onSlingshotHit={onSlingshotHit}
-            onBoostHit={onBoostHit}
-            onSensorHit={onSensorHit}
-            groupStates={groupStates}
-            onBallLost={onBallLost}
           />
         </Suspense>
 

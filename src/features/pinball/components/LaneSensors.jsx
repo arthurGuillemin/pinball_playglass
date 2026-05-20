@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { LANE_GROUPS } from "../hooks/useLaneGroups";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
+import { useGame } from "../context/GameContext";
 
 const GLB = "/pinball.glb?v=4";
 
@@ -12,16 +13,13 @@ const COLOR_DIM = new THREE.Color("#3a2000");
 const COLOR_ON = new THREE.Color("#ffaa00");
 const COLOR_COMPLETED = new THREE.Color("#fff5cc");
 
-// Quaternion du groupe parent — appliqué sur positions ET rotations
 const GROUP_EULER = new THREE.Euler(TILT_X, FLIP_Y, 0, "XYZ");
 const GROUP_QUAT = new THREE.Quaternion().setFromEuler(GROUP_EULER);
 
-// Position GLB (espace Blender) → world-space
 function toWorldPos(nodePosition) {
   return nodePosition.clone().applyQuaternion(GROUP_QUAT);
 }
 
-// Quaternion GLB → world-space (groupe * local)
 function toWorldQuat(nodeQuaternion) {
   return GROUP_QUAT.clone().multiply(nodeQuaternion);
 }
@@ -53,7 +51,6 @@ function LedMesh({ node, isLit, groupDone }) {
 
   if (!node?.geometry) return null;
 
-  // Applique la transformation du groupe sur position + quaternion
   const worldPos = toWorldPos(node.position.clone());
   const worldQuat = toWorldQuat(node.quaternion.clone());
 
@@ -82,8 +79,9 @@ function LedMesh({ node, isLit, groupDone }) {
 }
 
 // ─── Composant principal ──────────────────────────────────────────────────────
-export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
+export function LaneSensors() {
   const { nodes } = useGLTF(GLB);
+  const { groupStates, onSensorHit, onBoostHit } = useGame();
 
   useEffect(() => {
     if (import.meta.env.VITE_ENV !== "dev") return;

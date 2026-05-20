@@ -5,8 +5,9 @@ import { FlipperStaticWalls } from "./FlipperStaticWalls";
 import FlipperMesh from "./FlipperMesh";
 import { FlipperAnimator } from "./FlipperAnimator";
 import Ball from "./BallComponent";
-import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
 import { LaneSensors } from "./LaneSensors";
+import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
+import { useGame } from "../context/GameContext";
 
 const env = import.meta.env.VITE_ENV;
 const debugState = env === "dev";
@@ -19,12 +20,9 @@ export function PinballScene({
   leftRot,
   right2Rot,
   activeFlippers,
-  onBumperHit,
-  onSlingshotHit,
-  groupStates,
-  onSensorHit,
-  onBoostHit,
 }) {
+  const { onBumperHit, onSlingshotHit } = useGame();
+
   return (
     <Physics
       gravity={[0, -9.81, 0]}
@@ -45,11 +43,7 @@ export function PinballScene({
       </group>
 
       <Suspense fallback={null}>
-        <LaneSensors
-          groupStates={groupStates}
-          onSensorHit={onSensorHit}
-          onBoostHit={onBoostHit}
-        />
+        <LaneSensors />
       </Suspense>
 
       <Suspense fallback={null}>
