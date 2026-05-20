@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { RigidBody, MeshCollider } from "@react-three/rapier";
-import { FLIPPER_CONFIG, TILT_X, FLIP_Y } from "../constants/flipperConfig";
+import { FLIPPER_CONFIG, TILT_X, FLIP_Y } from "../../constants/flipperConfig";
 
 const GLB = "/pinball.glb?v=4";
 

@@ -3,9 +3,9 @@ import { useGLTF } from "@react-three/drei";
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { LANE_GROUPS } from "../hooks/useLaneGroups";
-import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
-import { useGame } from "../context/GameContext";
+import { LANE_GROUPS } from "../../hooks/useLaneGroups";
+import { TILT_X, FLIP_Y } from "../../constants/flipperConfig";
+import { useGame } from "../../context/GameContext";
 
 const GLB = "/pinball.glb?v=4";
 

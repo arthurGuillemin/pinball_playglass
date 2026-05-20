@@ -7,7 +7,7 @@ import {
   HULL_NODES,
   BUMPER_NODES,
   SLINGSHOT_NODES,
-} from "../constants/tableNodes";
+} from "../../constants/tableNodes";
 
 const GLB = "/pinball.glb?v=3";
 

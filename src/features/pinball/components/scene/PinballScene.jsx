@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { Physics } from "@react-three/rapier";
-import { PinballTable } from "./PinballTable";
-import { FlipperStaticWalls } from "./FlipperStaticWalls";
-import FlipperMesh from "./FlipperMesh";
-import { FlipperAnimator } from "./FlipperAnimator";
-import Ball from "./BallComponent";
-import { LaneSensors } from "./LaneSensors";
+import { PinballTable } from "./scene/PinballTable";
+import { FlipperStaticWalls } from "./flippers/FlipperStaticWalls";
+import FlipperMesh from "./flippers/FlipperMesh";
+import { FlipperAnimator } from "./flippers/FlipperAnimator";
+import Ball from "./ball/BallComponent";
+import { LaneSensors } from "./lanes/LaneSensors";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
 import { useGame } from "../context/GameContext";
 

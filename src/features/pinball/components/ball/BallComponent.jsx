@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { RigidBody } from "@react-three/rapier";
-import { SPAWN } from "../constants/ballConfig";
-import { useBallControls } from "../hooks/useBallControls";
+import { SPAWN } from "../../constants/ballConfig";
+import { useBallControls } from "../../hooks/useBallControls";
 
 function Ball() {
   const ref = useRef(null);
