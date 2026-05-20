@@ -1,7 +1,7 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { Suspense, useState } from "react";
-import { PinballScene } from "./features/pinball/components/scene/PinballScene";
+import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
 import { useGame } from "./features/pinball/context/GameContext";
 import ScoreDisplay from "./features/pinball/components/ui/ScoreDisplay";

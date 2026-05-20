@@ -1,38 +1,7 @@
 import { useState, useCallback } from "react";
+import { LANE_GROUPS } from "../constants/laneGroups";
 
-export const LANE_GROUPS = [
-  {
-    id: "lanes_right",
-    bonus: 5000,
-    lanes: [
-      { sensor: "SENSOR_lane_right_1", led: "LED_lane_right_1" },
-      { sensor: "SENSOR_lane_right_2", led: "LED_lane_right_2" },
-    ],
-  },
-  {
-    id: "lanes_left",
-    bonus: 5000,
-    lanes: [
-      { sensor: "SENSOR_lane_left_1", led: "LED_lane_left_1" },
-      { sensor: "SENSOR_lane_left_2", led: "LED_lane_left_2" },
-    ],
-  },
-  {
-    id: "lane_rampe",
-    bonus: 3000,
-    lanes: [{ sensor: "SENSOR_lane_rampe", led: "LED_lane_rampe" }],
-  },
-  {
-    id: "lane_cave",
-    bonus: 3000,
-    lanes: [{ sensor: "SENSOR_lane_cave", led: "LED_lane_cave" }],
-  },
-  {
-    id: "lane_up_right",
-    bonus: 3000,
-    lanes: [{ sensor: "SENSOR_lane_up_right", led: "LED_lane_up_right" }],
-  },
-];
+export { LANE_GROUPS };
 
 function buildInitialState() {
   return Object.fromEntries(
