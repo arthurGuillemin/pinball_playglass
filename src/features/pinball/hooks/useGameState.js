@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useLaneGroups } from "./useLaneGroups";
 import socketService from "../../../services/socket.service";
 
-const BOOST_DURATION_MS = 2500; // durée du boost en ms
+const BOOST_DURATION_MS = 2500;
 
 export function useGameState() {
   const [score, setScore] = useState(0);
@@ -15,7 +15,8 @@ export function useGameState() {
 
   useEffect(() => {
     socketService.connect();
-    socketService.onScreenMessage((data) => {
+
+    const removeScreenListener = socketService.onScreenMessage((data) => {
       if (data.type === "state_update") {
         setScore(data.state.score);
         setBalls(data.state.balls);
@@ -26,12 +27,15 @@ export function useGameState() {
         setIsRunning(false);
       }
     });
+
     const onCharge = (e) => {
       setCharging(e.detail.charging);
       setChargeLevel(e.detail.level);
     };
     window.addEventListener("ball-charge", onCharge);
+
     return () => {
+      removeScreenListener();
       window.removeEventListener("ball-charge", onCharge);
       socketService.disconnect();
     };
@@ -48,7 +52,12 @@ export function useGameState() {
   const startGame = useCallback((playerName) => {
     socketService.send("start_game", { playerName });
   }, []);
-  const onBonus = useCallback((points) => setScore((s) => s + points), []);
+
+  // Les points de bonus lanes passent par le backend comme les bumpers
+  const onBonus = useCallback((points) => {
+    socketService.send("hit", { points });
+  }, []);
+
   const { groupStates, onSensorHit } = useLaneGroups(onBonus);
 
   const onBoostHit = useCallback(() => {

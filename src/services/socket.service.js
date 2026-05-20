@@ -4,11 +4,13 @@ class SocketService {
   constructor() {
     this.screens = null;
     this.esp32 = null;
-    this.screenListeners = [];
-    this.esp32Listeners = [];
+    this.screenListeners = new Set();
+    this.esp32Listeners = new Set();
   }
 
   connect() {
+    if (this.screens?.readyState === WebSocket.OPEN) return;
+
     this.screens = new WebSocket(`${WS_URL}/screens`);
     this.screens.onopen = () => console.log("[Screens] connecté ✅");
     this.screens.onclose = () => console.log("[Screens] déconnecté");
@@ -36,26 +38,32 @@ class SocketService {
     };
   }
 
+  // Retourne une fonction de cleanup pour utilisation dans useEffect
   onScreenMessage(cb) {
-    this.screenListeners.push(cb);
+    this.screenListeners.add(cb);
+    return () => this.screenListeners.delete(cb);
   }
+
   onEsp32Message(cb) {
-    this.esp32Listeners.push(cb);
+    this.esp32Listeners.add(cb);
+    return () => this.esp32Listeners.delete(cb);
   }
 
   send(type, payload = {}) {
     if (this.screens?.readyState === WebSocket.OPEN) {
       this.screens.send(JSON.stringify({ type, ...payload }));
     } else {
-      console.warn(`[Screens] non connecté, message ${type} ignoré`);
+      console.warn(`[Screens] non connecté, message "${type}" ignoré`);
     }
   }
 
   disconnect() {
     this.screens?.close();
     this.esp32?.close();
-    this.screenListeners = [];
-    this.esp32Listeners = [];
+    this.screens = null;
+    this.esp32 = null;
+    this.screenListeners.clear();
+    this.esp32Listeners.clear();
   }
 }
 
