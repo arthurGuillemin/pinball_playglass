@@ -11,20 +11,27 @@ export function useGameState() {
   const [charging, setCharging] = useState(false);
   const [chargeLevel, setChargeLevel] = useState(0);
   const [boosted, setBoosted] = useState(false);
+  const [lightsActivated, setLightsActivated] = useState([]);
   const boostTimer = useRef(null);
+  const isConnected = useRef(false);
 
   useEffect(() => {
+    if (isConnected.current) return;
+
+    isConnected.current = true;
     socketService.connect();
 
-    const removeScreenListener = socketService.onScreenMessage((data) => {
+    socketService.onScreenMessage((data) => {
       if (data.type === "state_update") {
         setScore(data.state.score);
         setBalls(data.state.balls);
         setIsRunning(data.state.isRunning);
+        setLightsActivated(data.state.lightsActivated || []);
       }
       if (data.type === "game_over") {
         setScore(data.state.score);
         setIsRunning(false);
+        setLightsActivated([]);
       }
     });
 
@@ -32,33 +39,46 @@ export function useGameState() {
       setCharging(e.detail.charging);
       setChargeLevel(e.detail.level);
     };
+
     window.addEventListener("ball-charge", onCharge);
 
     return () => {
-      removeScreenListener();
       window.removeEventListener("ball-charge", onCharge);
-      socketService.disconnect();
     };
   }, []);
 
+  const onBonus = useCallback((points) => setScore((s) => s + points), []);
+
+  const {
+    groupStates,
+    onSensorHit: onSensorHitInternal,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
+  } = useLaneGroups(onBonus);
+
+  const onSensorHit = useCallback(
+    (sensorId) => {
+      socketService.send("light_sensor", { sensorId });
+      console.log(sensorId);
+      onSensorHitInternal(sensorId);
+    },
+    [onSensorHitInternal],
+  );
+
   const onBumperHit = useCallback(() => {
-    socketService.send("hit", { points: 100 });
+    socketService.send("bumper_hit");
+    console.log("bumper touché hit envoiyé");
   }, []);
 
   const onSlingshotHit = useCallback(() => {
-    socketService.send("hit", { points: 50 });
+    socketService.send("slingshot_hit");
   }, []);
 
   const startGame = useCallback((playerName) => {
     socketService.send("start_game", { playerName });
   }, []);
-
-  // Les points de bonus lanes passent par le backend comme les bumpers
-  const onBonus = useCallback((points) => {
-    socketService.send("hit", { points });
-  }, []);
-
-  const { groupStates, onSensorHit } = useLaneGroups(onBonus);
 
   const onBoostHit = useCallback(() => {
     setBoosted(true);
@@ -78,8 +98,13 @@ export function useGameState() {
     charging,
     chargeLevel,
     boosted,
+    lightsActivated,
     groupStates,
     onSensorHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
     onBoostHit,
     onBumperHit,
     onSlingshotHit,
