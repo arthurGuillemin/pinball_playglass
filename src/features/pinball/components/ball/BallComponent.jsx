@@ -1,28 +1,26 @@
 import { RigidBody } from "@react-three/rapier";
 import { useRef, useEffect, useCallback } from "react";
-import { useGame } from "../context/GameContext";
+import { useGame } from "../../context/GameContext";
+import {
+  MAX_CHARGE_TIME,
+  MAX_VELOCITY,
+  SPAWN,
+  DEBUG_SPAWN,
+  FALL_THRESHOLD_Y,
+  BOOST_IMPULSE,
+} from "../../constants/ballConfig";
 
-const MAX_CHARGE_TIME = 1500;
-const MAX_VELOCITY = 4;
-const SPAWN = { x: 0.38, y: 0.03, z: 0.76 };
-// spawn sur la partie annexe const SPAWN = { x: 0.08, y: 1.51, z: -1.4884 };
-
-(0.09838, 0.5, -1.2);
-const MiddleSpawn = { x: 0.09838, y: 0.5, z: -1.2 };
-
-const BOOST_IMPULSE = { x: -0.3, y: 0.15, z: -2.5 };
+function emitCharge(charging, level = 0) {
+  window.dispatchEvent(
+    new CustomEvent("ball-charge", { detail: { charging, level } }),
+  );
+}
 
 function Ball() {
   const { onBallLost } = useGame();
   const ref = useRef(null);
   const chargeStart = useRef(null);
   const animFrame = useRef(null);
-
-  function emitCharge(charging, level = 0) {
-    window.dispatchEvent(
-      new CustomEvent("ball-charge", { detail: { charging, level } }),
-    );
-  }
 
   const respawn = useCallback(() => {
     if (!ref.current) return;
@@ -37,7 +35,7 @@ function Ball() {
 
   const respawnMiddle = useCallback(() => {
     if (!ref.current) return;
-    ref.current.setTranslation(MiddleSpawn, true);
+    ref.current.setTranslation(DEBUG_SPAWN, true);
     ref.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
     ref.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
     cancelAnimationFrame(animFrame.current);
@@ -68,7 +66,6 @@ function Ball() {
         },
         true,
       );
-      console.log("[BOOST] impulsion appliquée", BOOST_IMPULSE);
     };
     window.addEventListener("ball-boost", onBoost);
     return () => window.removeEventListener("ball-boost", onBoost);
@@ -112,7 +109,7 @@ function Ball() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (!ref.current) return;
-      if (ref.current.translation().y < -1) respawn();
+      if (ref.current.translation().y < FALL_THRESHOLD_Y) respawn();
     }, 500);
     return () => clearInterval(interval);
   }, [respawn]);

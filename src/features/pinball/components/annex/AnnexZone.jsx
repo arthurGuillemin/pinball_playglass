@@ -7,7 +7,6 @@ import * as THREE from "three";
 const GLB = "/pinball.glb";
 
 const FLOOR_NODE = "COL_floor_annexe";
-
 const STATIC_NODES = [
   "COL_wall_annexe_1",
   "COL_wall_annexe_2",
@@ -16,8 +15,6 @@ const STATIC_NODES = [
   "COL_wall_annexe_down_R",
   "COL_wall_annexe_down_L",
 ];
-
-// Positions calculées en appliquant la rotation GLB sur les vertices locaux
 const CARDS = [
   {
     sensor: "SENSOR_card_1",
@@ -44,43 +41,66 @@ const CARDS = [
     half: [0.05, 0.06, 0.05],
   },
 ];
-
 const CARD_SINK_Y = -0.12;
-
 const COLOR_DIM = new THREE.Color("#3a2000");
 const COLOR_ON = new THREE.Color("#ffaa00");
 const COLOR_COMPLETED = new THREE.Color("#fff5cc");
 
-function getMeshes(node) {
-  if (!node) return [];
-  if (node.type === "Mesh") return [node];
-  return node.children?.filter((c) => c.type === "Mesh") ?? [];
+// Rend un node Three.js quel que soit son type (Mesh ou Group multi-matériaux)
+function RenderNode({ node, ...props }) {
+  if (!node) return null;
+  if (node.type === "Mesh") {
+    return (
+      <mesh
+        geometry={node.geometry}
+        material={node.material}
+        position={node.position}
+        quaternion={node.quaternion}
+        scale={node.scale}
+        {...props}
+      />
+    );
+  }
+  if (node.type === "Group") {
+    return (
+      <group
+        position={node.position}
+        quaternion={node.quaternion}
+        scale={node.scale}
+      >
+        {node.children
+          .filter((c) => c.type === "Mesh")
+          .map((m, i) => (
+            <mesh
+              key={i}
+              geometry={m.geometry}
+              material={m.material}
+              position={m.position}
+              quaternion={m.quaternion}
+              scale={m.scale}
+              {...props}
+            />
+          ))}
+      </group>
+    );
+  }
+  return null;
 }
 
 function StaticMesh({ node }) {
-  if (!node?.geometry) return null;
+  if (!node) return null;
   return (
     <RigidBody type="fixed" colliders={false} restitution={0.35} friction={0.4}>
       <MeshCollider type="trimesh">
-        <mesh
-          geometry={node.geometry}
-          material={node.material}
-          position={node.position}
-          quaternion={node.quaternion}
-          scale={node.scale}
-          castShadow
-          receiveShadow
-        />
+        <RenderNode node={node} castShadow receiveShadow />
       </MeshCollider>
     </RigidBody>
   );
 }
 
-// LED identique au pattern LaneSensors
 function CardLed({ node, isLit, groupDone }) {
   const matRef = useRef();
   const lightRef = useRef();
-
   useFrame(() => {
     if (!matRef.current || !lightRef.current) return;
     if (groupDone) {
@@ -100,17 +120,17 @@ function CardLed({ node, isLit, groupDone }) {
       lightRef.current.intensity = 0;
     }
   });
-
-  const meshes = getMeshes(node);
-  if (!meshes.length) return null;
-
+  if (!node) return null;
+  const meshNode =
+    node.type === "Mesh" ? node : node.children?.find((c) => c.type === "Mesh");
+  if (!meshNode?.geometry) return null;
   return (
     <group
       position={node.position}
       quaternion={node.quaternion}
       scale={node.scale}
     >
-      <mesh geometry={meshes[0].geometry}>
+      <mesh geometry={meshNode.geometry}>
         <meshStandardMaterial
           ref={matRef}
           color="#1a0d00"
@@ -132,13 +152,11 @@ function CardLed({ node, isLit, groupDone }) {
   );
 }
 
-// Card animée qui descend quand touchée
 function CardTarget({ cardData, index, isLit, groupDone, raised, onCardHit }) {
   const { nodes } = useGLTF(GLB);
   const cardGroupRef = useRef();
-  const currentY = useRef(raised ? 0 : CARD_SINK_Y); // initialiser selon l'état
+  const currentY = useRef(raised ? 0 : CARD_SINK_Y);
   const targetY = raised ? 0 : CARD_SINK_Y;
-
   useFrame((_, delta) => {
     if (!cardGroupRef.current) return;
     currentY.current = THREE.MathUtils.lerp(
@@ -148,15 +166,12 @@ function CardTarget({ cardData, index, isLit, groupDone, raised, onCardHit }) {
     );
     cardGroupRef.current.position.y = currentY.current;
   });
-
   const sNode = nodes[cardData.sensor];
   const lNode = nodes[cardData.led];
-
   return (
     <>
-      {/* Card + sensor (descend quand touchée) */}
       <group ref={cardGroupRef}>
-        {raised && (
+        {raised && sNode && (
           <RigidBody
             type="fixed"
             sensor
@@ -165,19 +180,8 @@ function CardTarget({ cardData, index, isLit, groupDone, raised, onCardHit }) {
             <CuboidCollider args={cardData.half} position={cardData.pos} />
           </RigidBody>
         )}
-        {getMeshes(sNode).map((m, j) => (
-          <mesh
-            key={j}
-            geometry={m.geometry}
-            material={m.material}
-            position={sNode.position}
-            quaternion={sNode.quaternion}
-            castShadow
-          />
-        ))}
+        <RenderNode node={sNode} castShadow />
       </group>
-
-      {/* LED fixe sur le sol */}
       <CardLed node={lNode} isLit={isLit} groupDone={groupDone} />
     </>
   );
@@ -185,16 +189,12 @@ function CardTarget({ cardData, index, isLit, groupDone, raised, onCardHit }) {
 
 export function AnnexZone({ cardStates, annexPhase, onCardHit, onQuestLost }) {
   const { nodes } = useGLTF(GLB);
-
   const safeStates = cardStates ?? [false, false, false, false];
   const groupDone = safeStates.every(Boolean);
   const cardsRaised = safeStates.map((hit) => !hit);
 
-  const floorMeshes = getMeshes(nodes[FLOOR_NODE]);
-
   return (
     <>
-      {/* Sol */}
       <RigidBody
         type="fixed"
         colliders={false}
@@ -205,28 +205,14 @@ export function AnnexZone({ cardStates, annexPhase, onCardHit, onQuestLost }) {
           args={[0.25, 0.025, 0.25]}
           position={[0, 0.3, 1.4628]}
         />
-        {floorMeshes.map((m, i) => (
-          <mesh
-            key={i}
-            geometry={m.geometry}
-            material={m.material}
-            castShadow
-            receiveShadow
-          />
-        ))}
+        <RenderNode node={nodes[FLOOR_NODE]} castShadow receiveShadow />
       </RigidBody>
-
-      {/* Murs */}
       {STATIC_NODES.map((name) => (
         <StaticMesh key={name} node={nodes[name]} />
       ))}
-
-      {/* Sensor de sortie */}
       <RigidBody type="fixed" sensor onIntersectionEnter={onQuestLost}>
         <CuboidCollider args={[0.25, 0.06, 0.04]} position={[0, 0.25, 1.21]} />
       </RigidBody>
-
-      {/* Cards */}
       {CARDS.map((cardData, i) => (
         <CardTarget
           key={cardData.sensor}

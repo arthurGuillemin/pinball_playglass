@@ -1,14 +1,15 @@
 import { Suspense } from "react";
 import { Physics } from "@react-three/rapier";
-import { PinballTable } from "./PinballTable";
-import { FlipperStaticWalls } from "./FlipperStaticWalls";
-import FlipperMesh from "./FlipperMesh";
-import { FlipperAnimator } from "./FlipperAnimator";
-import Ball from "./BallComponent";
+import { PinballTable } from "./scene/PinballTable";
+import { FlipperStaticWalls } from "./flippers/FlipperStaticWalls";
+import FlipperMesh from "./flippers/FlipperMesh";
+import { FlipperAnimator } from "./flippers/FlipperAnimator";
+import Ball from "./ball/BallComponent";
+import { LaneSensors } from "./lanes/LaneSensors";
+import { AnnexZone } from "./annex/AnnexZone";
+import { AnnexFlippers } from "./annex/AnnexFlippers";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
-import { LaneSensors } from "./LaneSensors";
-import { AnnexZone } from "./AnnexZone";
-import { AnnexFlippers } from "./AnnexFlippers";
+import { useGame } from "../context/GameContext";
 
 const env = import.meta.env.VITE_ENV;
 const debugState = env === "dev";
@@ -21,17 +22,16 @@ export function PinballScene({
   leftRot,
   right2Rot,
   activeFlippers,
-  onBumperHit,
-  onSlingshotHit,
-  groupStates,
-  onSensorHit,
-  onBoostHit,
-  onBallLost,
-  cardStates,
-  annexPhase,
-  onCardHit,
-  onQuestLost,
 }) {
+  const {
+    onBumperHit,
+    onSlingshotHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
+  } = useGame();
+
   return (
     <Physics
       gravity={[0, -9.81, 0]}
@@ -58,11 +58,7 @@ export function PinballScene({
       </group>
 
       <Suspense fallback={null}>
-        <LaneSensors
-          groupStates={groupStates}
-          onSensorHit={onSensorHit}
-          onBoostHit={onBoostHit}
-        />
+        <LaneSensors />
       </Suspense>
 
       <Suspense fallback={null}>

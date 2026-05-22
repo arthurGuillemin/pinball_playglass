@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { RigidBody, MeshCollider } from "@react-three/rapier";
-import { FLIPPER_CONFIG, TILT_X, FLIP_Y } from "../constants/flipperConfig";
+import { FLIPPER_CONFIG, TILT_X, FLIP_Y } from "../../constants/flipperConfig";
 
 const GLB = "/pinball.glb";
 
@@ -20,7 +20,6 @@ const FlipperMesh = forwardRef(({ side = "right" }, ref) => {
       ref={ref}
       type="kinematicPosition"
       colliders={false}
-      // restitution ICI est ignorée par Rapier pour kinematic
       position={pivotWorld}
     >
       <MeshCollider type="hull" restitution={2} friction={0.1}>
@@ -38,5 +37,4 @@ const FlipperMesh = forwardRef(({ side = "right" }, ref) => {
 
 FlipperMesh.displayName = "FlipperMesh";
 export default FlipperMesh;
-
 useGLTF.preload(GLB);

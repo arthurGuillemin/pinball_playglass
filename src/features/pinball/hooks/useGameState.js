@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useLaneGroups } from "./useLaneGroups";
+import { useLaneGroups, LANE_GROUPS } from "./useLaneGroups";
+import { useAnnexQuest } from "./useAnnexQuest";
 import socketService from "../../../services/socket.service";
 
 const BOOST_DURATION_MS = 2500;
@@ -17,8 +18,8 @@ export function useGameState() {
 
   useEffect(() => {
     if (isConnected.current) return;
-
     isConnected.current = true;
+
     socketService.connect();
 
     socketService.onScreenMessage((data) => {
@@ -26,10 +27,11 @@ export function useGameState() {
         setScore(data.state.score);
         setBalls(data.state.balls);
         setIsRunning(data.state.isRunning);
-        setLightsActivated(data.state.lightsActivated || []);
+        setLightsActivated(data.state.lightsActivated ?? []);
       }
       if (data.type === "game_over") {
         setScore(data.state.score);
+        setBalls(0);
         setIsRunning(false);
         setLightsActivated([]);
       }
@@ -39,7 +41,6 @@ export function useGameState() {
       setCharging(e.detail.charging);
       setChargeLevel(e.detail.level);
     };
-
     window.addEventListener("ball-charge", onCharge);
 
     return () => {
@@ -47,29 +48,27 @@ export function useGameState() {
     };
   }, []);
 
-  const onBonus = useCallback((points) => setScore((s) => s + points), []);
+  const { groupStates } = useLaneGroups(lightsActivated);
 
+  const onBonus = useCallback((points) => setScore((s) => s + points), []);
   const {
-    groupStates,
-    onSensorHit: onSensorHitInternal,
-    cardStates,
-    annexPhase,
+    cardHits,
+    cardsRaised,
+    phase: annexPhase,
     onCardHit,
     onQuestLost,
-  } = useLaneGroups(onBonus);
+  } = useAnnexQuest(onBonus);
 
-  const onSensorHit = useCallback(
-    (sensorId) => {
-      socketService.send("light_sensor", { sensorId });
-      console.log(sensorId);
-      onSensorHitInternal(sensorId);
-    },
-    [onSensorHitInternal],
-  );
+  const onSensorHit = useCallback((groupId, laneIndex) => {
+    const group = LANE_GROUPS.find((g) => g.id === groupId);
+    const sensorName = group?.lanes[laneIndex]?.sensor;
+    if (sensorName) {
+      socketService.send("light_sensor", { sensorId: sensorName });
+    }
+  }, []);
 
   const onBumperHit = useCallback(() => {
     socketService.send("bumper_hit");
-    console.log("bumper touché hit envoiyé");
   }, []);
 
   const onSlingshotHit = useCallback(() => {
@@ -101,7 +100,8 @@ export function useGameState() {
     lightsActivated,
     groupStates,
     onSensorHit,
-    cardStates,
+    cardStates: cardHits,
+    cardsRaised,
     annexPhase,
     onCardHit,
     onQuestLost,

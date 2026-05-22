@@ -1,5 +1,5 @@
 import { useFrame } from "@react-three/fiber";
-import { ROTATIONS, SLERP } from "../constants/flipperConfig";
+import { ROTATIONS, SLERP } from "../../constants/flipperConfig";
 
 export function FlipperAnimator({
   rightRef,

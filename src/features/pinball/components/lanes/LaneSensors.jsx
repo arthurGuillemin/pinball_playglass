@@ -3,30 +3,26 @@ import { useGLTF } from "@react-three/drei";
 import { RigidBody, CuboidCollider } from "@react-three/rapier";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { LANE_GROUPS } from "../hooks/useLaneGroups";
-import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
+import { LANE_GROUPS } from "../../constants/laneGroups";
+import { TILT_X, FLIP_Y } from "../../constants/flipperConfig";
+import { useGame } from "../../context/GameContext";
 
-const GLB = "/pinball.glb?v=4";
+const GLB = "/pinball.glb";
 
 const COLOR_DIM = new THREE.Color("#3a2000");
 const COLOR_ON = new THREE.Color("#ffaa00");
 const COLOR_COMPLETED = new THREE.Color("#fff5cc");
 
-// Quaternion du groupe parent — appliqué sur positions ET rotations
 const GROUP_EULER = new THREE.Euler(TILT_X, FLIP_Y, 0, "XYZ");
 const GROUP_QUAT = new THREE.Quaternion().setFromEuler(GROUP_EULER);
 
-// Position GLB (espace Blender) → world-space
 function toWorldPos(nodePosition) {
   return nodePosition.clone().applyQuaternion(GROUP_QUAT);
 }
-
-// Quaternion GLB → world-space (groupe * local)
 function toWorldQuat(nodeQuaternion) {
   return GROUP_QUAT.clone().multiply(nodeQuaternion);
 }
 
-// ─── LED visuelle ─────────────────────────────────────────────────────────────
 function LedMesh({ node, isLit, groupDone }) {
   const matRef = useRef();
   const lightRef = useRef();
@@ -52,8 +48,6 @@ function LedMesh({ node, isLit, groupDone }) {
   });
 
   if (!node?.geometry) return null;
-
-  // Applique la transformation du groupe sur position + quaternion
   const worldPos = toWorldPos(node.position.clone());
   const worldQuat = toWorldQuat(node.quaternion.clone());
 
@@ -81,9 +75,9 @@ function LedMesh({ node, isLit, groupDone }) {
   );
 }
 
-// ─── Composant principal ──────────────────────────────────────────────────────
-export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
+export function LaneSensors() {
   const { nodes } = useGLTF(GLB);
+  const { groupStates, onSensorHit, onBoostHit } = useGame();
 
   useEffect(() => {
     if (import.meta.env.VITE_ENV !== "dev") return;
@@ -109,27 +103,21 @@ export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
       {LANE_GROUPS.map((group) => {
         const leds = groupStates[group.id] ?? [];
         const groupDone = leds.length > 0 && leds.every(Boolean);
-
         return group.lanes.map(({ sensor, led }, laneIndex) => {
           const sNode = nodes[sensor];
           const ledNode = nodes[led];
           const isLit = leds[laneIndex] ?? false;
-
           const worldPos = sNode
             ? toWorldPos(sNode.position.clone())
             : new THREE.Vector3();
           const half = (sNode?.scale?.x ?? 0.0124) * 1.5;
-
           return (
             <group key={sensor}>
               {sNode && (
                 <RigidBody
                   type="fixed"
                   sensor={true}
-                  onIntersectionEnter={() => {
-                    console.log(`[HIT] ${sensor} → ${group.id}[${laneIndex}]`);
-                    onSensorHit(group.id, laneIndex);
-                  }}
+                  onIntersectionEnter={() => onSensorHit(group.id, laneIndex)}
                 >
                   <CuboidCollider
                     args={[half, half, half]}
@@ -142,9 +130,8 @@ export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
           );
         });
       })}
-
       {Object.keys(nodes)
-        .filter((name) => name.startsWith("SENSOR_boost"))
+        .filter((n) => n.startsWith("SENSOR_boost"))
         .map((name) => {
           const n = nodes[name];
           if (!n) return null;
@@ -155,10 +142,7 @@ export function LaneSensors({ groupStates, onSensorHit, onBoostHit }) {
               key={name}
               type="fixed"
               sensor={true}
-              onIntersectionEnter={() => {
-                console.log("[BOOST] déclenché");
-                onBoostHit();
-              }}
+              onIntersectionEnter={onBoostHit}
             >
               <CuboidCollider
                 args={[half, half, half]}

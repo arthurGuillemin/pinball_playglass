@@ -1,8 +1,8 @@
 import { useGLTF } from "@react-three/drei";
 import { RigidBody, MeshCollider } from "@react-three/rapier";
-import { FLIPPER_STATIC_NODES } from "../constants/flipperConfig";
+import { FLIPPER_STATIC_NODES } from "../../constants/flipperConfig";
 
-const GLB = "/pinball.glb?v=3";
+const GLB = "/pinball.glb";
 
 export function FlipperStaticWalls({ side = "right" }) {
   const { nodes } = useGLTF(GLB);

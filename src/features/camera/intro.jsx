@@ -13,7 +13,7 @@ const TARGET_LOOK = new THREE.Vector3(0, 0, 0);
 
 function CameraIntro({ active, onFinish }) {
   const { camera } = useThree();
-  const { isRunning, startGame } = useGame(); // ✅
+  const { isRunning, startGame } = useGame();
 
   const curve = useRef(
     new THREE.CatmullRomCurve3([
@@ -40,13 +40,15 @@ function CameraIntro({ active, onFinish }) {
   }, [camera]);
 
   useEffect(() => {
+    // Game over → reset complet pour permettre une nouvelle partie
     if (!isRunning && previousIsRunning.current) {
       t.current = 0;
       phase.current = 0;
       started.current = false;
-      finished.current = false;
+      finished.current = false; // ← clé : permet à T de relancer
       camera.position.copy(START_POS);
       camera.lookAt(curve.current.getTangent(0));
+      onFinish && onFinish(false); // signale à App que l'intro n'est plus finie
     }
 
     if (isRunning && !previousIsRunning.current && !started.current) {
@@ -56,7 +58,7 @@ function CameraIntro({ active, onFinish }) {
     }
 
     previousIsRunning.current = isRunning;
-  }, [isRunning, camera]);
+  }, [isRunning, camera, onFinish]);
 
   useEffect(() => {
     const handleKey = (e) => {
@@ -73,7 +75,7 @@ function CameraIntro({ active, onFinish }) {
         camera.position.copy(TARGET_POS);
         camera.lookAt(TARGET_LOOK);
         finished.current = true;
-        onFinish?.();
+        onFinish?.(true);
       }
     };
 
@@ -101,7 +103,7 @@ function CameraIntro({ active, onFinish }) {
       camera.lookAt(TARGET_LOOK);
       if (camera.position.distanceTo(TARGET_POS) < 0.01) {
         finished.current = true;
-        onFinish?.();
+        onFinish?.(true);
       }
     }
   });

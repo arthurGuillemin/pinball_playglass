@@ -3,13 +3,13 @@ import { OrbitControls } from "@react-three/drei";
 import { Suspense, useState } from "react";
 import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
-import ScoreDisplay from "./components/ScoreDisplay";
-import ChargeBar from "./components/ChargeBar";
-import ControlsHint from "./components/ControlsHint";
+import { useGame } from "./features/pinball/context/GameContext";
+import ScoreDisplay from "./features/pinball/components/ui/ScoreDisplay";
+import ChargeBar from "./features/pinball/components/ui/ChargeBar";
+import ControlsHint from "./features/pinball/components/ui/ControlsHint";
 import StatsPanel from "./utils/stats.js";
 import CameraDebugger from "./utils/CameraDebugger.js";
 import CameraIntro from "./features/camera/intro.jsx";
-import { useGameState } from "./features/pinball/hooks/useGameState.js";
 
 const env = import.meta.env.VITE_ENV;
 const debugState = env === "dev";
@@ -24,39 +24,27 @@ export default function App() {
     right2Rot,
     activeFlippers,
   } = useFlipperControls();
+  const { score, charging, chargeLevel } = useGame();
 
-  const {
-    score,
-    isRunning,
-    charging,
-    chargeLevel,
-    groupStates,
-    onSensorHit,
-    cardStates,
-    annexPhase,
-    onCardHit,
-    onQuestLost,
-    onBoostHit,
-    onBumperHit,
-    onSlingshotHit,
-    onBallLost,
-  } = useGameState();
-
-  const [cameraIntro, setCameraIntro] = useState(true);
+  // false = intro en cours, true = intro terminée (OrbitControls actifs)
+  const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
       <ScoreDisplay score={score} />
       <ChargeBar charging={charging} chargeLevel={chargeLevel} />
       <ControlsHint />
+
       <Canvas
         shadows
         camera={{ position: [0, 3, 2.5], fov: 45, near: 0.01, far: 100 }}
       >
+        {/* onFinish reçoit true (terminée) ou false (reset après game over) */}
         <CameraIntro
-          active={isRunning}
-          onFinish={() => setCameraIntro(false)}
+          active={!cameraIntroFinished}
+          onFinish={(finished) => setCameraIntroFinished(finished)}
         />
+
         <CameraDebugger />
         <ambientLight intensity={0.5} />
         <directionalLight
@@ -67,6 +55,7 @@ export default function App() {
           shadow-mapSize-height={2048}
         />
         {debugState && <StatsPanel />}
+
         <Suspense fallback={null}>
           <PinballScene
             rightRef={rightRef}
@@ -76,19 +65,12 @@ export default function App() {
             leftRot={leftRot}
             right2Rot={right2Rot}
             activeFlippers={activeFlippers}
-            onBumperHit={onBumperHit}
-            onSlingshotHit={onSlingshotHit}
-            onBoostHit={onBoostHit}
-            onBallLost={onBallLost}
-            groupStates={groupStates}
-            onSensorHit={onSensorHit}
-            cardStates={cardStates}
-            annexPhase={annexPhase}
-            onCardHit={onCardHit}
-            onQuestLost={onQuestLost}
           />
         </Suspense>
-        {!cameraIntro && <OrbitControls makeDefault target={[0, 0, 0]} />}
+
+        {cameraIntroFinished && (
+          <OrbitControls makeDefault target={[0, 0, 0]} />
+        )}
       </Canvas>
     </div>
   );
