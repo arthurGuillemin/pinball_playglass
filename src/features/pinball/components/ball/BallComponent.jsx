@@ -9,6 +9,7 @@ import {
   FALL_THRESHOLD_Y,
   BOOST_IMPULSE,
 } from "../../constants/ballConfig";
+import { useSound } from "../../hooks/useSound";
 
 function emitCharge(charging, level = 0) {
   window.dispatchEvent(
@@ -17,6 +18,7 @@ function emitCharge(charging, level = 0) {
 }
 
 function Ball() {
+  const { play } = useSound();
   const { onBallLost } = useGame();
   const ref = useRef(null);
   const chargeStart = useRef(null);
@@ -51,8 +53,9 @@ function Ball() {
     ref.current.setLinvel({ x: 0, y: 0, z: -speed }, true);
     cancelAnimationFrame(animFrame.current);
     chargeStart.current = null;
+    play("launcher", 0.3);
     emitCharge(false);
-  }, []);
+  }, [play]);
 
   useEffect(() => {
     const onBoost = () => {
@@ -109,7 +112,10 @@ function Ball() {
   useEffect(() => {
     const interval = setInterval(() => {
       if (!ref.current) return;
-      if (ref.current.translation().y < FALL_THRESHOLD_Y) respawn();
+      if (ref.current.translation().y < FALL_THRESHOLD_Y) {
+        respawn();
+        play("death", 0.7);
+      }
     }, 500);
     return () => clearInterval(interval);
   }, [respawn]);

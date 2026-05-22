@@ -23,7 +23,6 @@ class SocketService {
     };
 
     this.esp32 = new WebSocket(`${WS_URL}/esp32`);
-    this.esp32.onopen = () => console.log("[ESP32] connecté ✅");
     this.esp32.onclose = () => console.log("[ESP32] déconnecté");
     this.esp32.onerror = (e) => console.error("[ESP32] erreur", e);
     this.esp32.onmessage = (e) => {
