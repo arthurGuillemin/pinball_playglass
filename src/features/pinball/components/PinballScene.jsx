@@ -6,6 +6,8 @@ import FlipperMesh from "./flippers/FlipperMesh";
 import { FlipperAnimator } from "./flippers/FlipperAnimator";
 import Ball from "./ball/BallComponent";
 import { LaneSensors } from "./lanes/LaneSensors";
+import { AnnexZone } from "./annex/AnnexZone";
+import { AnnexFlippers } from "./annex/AnnexFlippers";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
 import { useGame } from "../context/GameContext";
 
@@ -21,7 +23,14 @@ export function PinballScene({
   right2Rot,
   activeFlippers,
 }) {
-  const { onBumperHit, onSlingshotHit } = useGame();
+  const {
+    onBumperHit,
+    onSlingshotHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
+  } = useGame();
 
   return (
     <Physics
@@ -39,6 +48,12 @@ export function PinballScene({
           <FlipperStaticWalls side="left" />
           <FlipperStaticWalls side="right" />
           <FlipperStaticWalls side="right2" />
+          <AnnexZone
+            cardStates={cardStates}
+            annexPhase={annexPhase}
+            onCardHit={onCardHit}
+            onQuestLost={onQuestLost}
+          />
         </Suspense>
       </group>
 
@@ -50,6 +65,7 @@ export function PinballScene({
         <FlipperMesh side="left" ref={leftRef} />
         <FlipperMesh side="right" ref={rightRef} />
         <FlipperMesh side="right2" ref={right2Ref} />
+        <AnnexFlippers activeFlippers={activeFlippers} />
       </Suspense>
 
       <Ball />

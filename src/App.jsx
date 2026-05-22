@@ -25,9 +25,10 @@ export default function App() {
     activeFlippers,
   } = useFlipperControls();
 
-  const { score, isRunning, charging, chargeLevel } = useGame();
+  const { score, charging, chargeLevel } = useGame();
 
-  const [cameraIntro, setCameraIntro] = useState(true);
+  // true = animation terminée, OrbitControls activés
+  const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
@@ -39,9 +40,10 @@ export default function App() {
         shadows
         camera={{ position: [0, 3, 2.5], fov: 45, near: 0.01, far: 100 }}
       >
+        {/* active=true dès le départ — T démarre, S skip, onFinish désactive */}
         <CameraIntro
-          active={isRunning}
-          onFinish={() => setCameraIntro(false)}
+          active={!cameraIntroFinished}
+          onFinish={() => setCameraIntroFinished(true)}
         />
 
         <CameraDebugger />
@@ -69,7 +71,9 @@ export default function App() {
           />
         </Suspense>
 
-        {!cameraIntro && <OrbitControls makeDefault target={[0, 0, 0]} />}
+        {cameraIntroFinished && (
+          <OrbitControls makeDefault target={[0, 0, 0]} />
+        )}
       </Canvas>
     </div>
   );

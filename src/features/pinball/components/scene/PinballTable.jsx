@@ -9,7 +9,7 @@ import {
   SLINGSHOT_NODES,
 } from "../../constants/tableNodes";
 
-const GLB = "/pinball.glb?v=3";
+const GLB = "/pinball.glb?v=4";
 
 const defaultMat = new MeshStandardMaterial({ color: "#aaaaaa", side: 2 });
 
