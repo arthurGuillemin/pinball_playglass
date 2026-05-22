@@ -11,9 +11,13 @@ const TARGET_POS = new THREE.Vector3(
 );
 const TARGET_LOOK = new THREE.Vector3(0, 0, 0);
 
+const CURVE_DURATION = 7000;
+const LERP_DURATION = 1500;
+const TOTAL_DURATION = 10000;
+
 function CameraIntro({ active, onFinish }) {
   const { camera } = useThree();
-  const { isRunning, startGame } = useGame(); // ✅
+  const { isRunning, startGame } = useGame();
 
   const curve = useRef(
     new THREE.CatmullRomCurve3([
@@ -28,11 +32,12 @@ function CameraIntro({ active, onFinish }) {
     ]),
   );
 
-  const t = useRef(0);
   const phase = useRef(0);
   const started = useRef(false);
   const finished = useRef(false);
   const previousIsRunning = useRef(false);
+  const startTime = useRef(0);
+  const phaseStartTime = useRef(0);
 
   useEffect(() => {
     camera.position.copy(START_POS);
@@ -41,18 +46,21 @@ function CameraIntro({ active, onFinish }) {
 
   useEffect(() => {
     if (!isRunning && previousIsRunning.current) {
-      t.current = 0;
       phase.current = 0;
       started.current = false;
       finished.current = false;
+      startTime.current = 0;
+      phaseStartTime.current = 0;
       camera.position.copy(START_POS);
       camera.lookAt(curve.current.getTangent(0));
     }
 
     if (isRunning && !previousIsRunning.current && !started.current) {
-      console.log("🎮 Intro démarrée via WebSocket (backglass)");
+      console.log("🎮 Intro démarrée via WebSocket (6 secondes)");
       started.current = true;
       phase.current = 1;
+      startTime.current = performance.now();
+      phaseStartTime.current = performance.now();
     }
 
     previousIsRunning.current = isRunning;
@@ -63,10 +71,11 @@ function CameraIntro({ active, onFinish }) {
       const key = e.key.toLowerCase();
 
       if (key === "t" && !started.current) {
-        console.log("🔧 Dev : touche T");
-        startGame("Player1");
+        startGame();
         started.current = true;
         phase.current = 1;
+        startTime.current = performance.now();
+        phaseStartTime.current = performance.now();
       }
 
       if (key === "s" && active && !finished.current) {
@@ -84,23 +93,40 @@ function CameraIntro({ active, onFinish }) {
   useFrame(() => {
     if (!active || finished.current || phase.current === 0) return;
 
+    const now = performance.now();
+    const totalElapsed = now - startTime.current;
+
     if (phase.current === 1) {
-      t.current += 0.002;
-      if (t.current >= 1) {
-        t.current = 1;
+      const phaseElapsed = now - phaseStartTime.current;
+      const t = Math.min(phaseElapsed / CURVE_DURATION, 1);
+
+      if (t >= 1) {
         phase.current = 2;
+        phaseStartTime.current = now;
       }
-      const point = curve.current.getPoint(t.current);
-      const tangent = curve.current.getTangent(t.current);
+
+      const point = curve.current.getPoint(t);
+      const tangent = curve.current.getTangent(t);
       camera.position.copy(point);
       camera.lookAt(point.clone().add(tangent));
     }
 
     if (phase.current === 2) {
-      camera.position.lerp(TARGET_POS, 0.05);
+      const phaseElapsed = now - phaseStartTime.current;
+      const lerpProgress = Math.min(phaseElapsed / LERP_DURATION, 1);
+      const easedProgress = 1 - Math.pow(1 - lerpProgress, 3);
+
+      camera.position.lerpVectors(
+        curve.current.getPoint(1),
+        TARGET_POS,
+        easedProgress,
+      );
       camera.lookAt(TARGET_LOOK);
-      if (camera.position.distanceTo(TARGET_POS) < 0.01) {
+
+      if (lerpProgress >= 1) {
+        camera.position.copy(TARGET_POS);
         finished.current = true;
+        console.log(`✅ Intro terminée en ${totalElapsed.toFixed(0)}ms`);
         onFinish?.();
       }
     }

@@ -8,6 +8,7 @@ import {
   FALL_THRESHOLD_Y,
   BOOST_IMPULSE,
 } from "../constants/ballConfig";
+import { useSound } from "./useSound";
 
 function emitCharge(charging, level = 0) {
   window.dispatchEvent(
@@ -19,6 +20,7 @@ export function useBallControls(ref) {
   const { onBallLost } = useGame();
   const chargeStart = useRef(null);
   const animFrame = useRef(null);
+  const { play } = useSound();
 
   const respawn = useCallback(() => {
     if (!ref.current) return;
@@ -94,6 +96,7 @@ export function useBallControls(ref) {
     const onKeyUp = (e) => {
       if (e.code === "Space") {
         e.preventDefault();
+        play("launcher", 0.3);
         launch();
       }
     };
@@ -110,6 +113,11 @@ export function useBallControls(ref) {
   useEffect(() => {
     const interval = setInterval(() => {
       if (!ref.current) return;
+      if (
+        ref.current.translation().y < FALL_THRESHOLD_Y + 0.9 &&
+        ref.current.translation().x < 0.4
+      )
+        play("death");
       if (ref.current.translation().y < FALL_THRESHOLD_Y) respawn();
     }, 500);
     return () => clearInterval(interval);
