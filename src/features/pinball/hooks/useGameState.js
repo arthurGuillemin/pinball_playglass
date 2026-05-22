@@ -1,21 +1,114 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useLaneGroups, LANE_GROUPS } from "./useLaneGroups";
+import { useAnnexQuest } from "./useAnnexQuest";
+import socketService from "../../../services/socket.service";
+
+const BOOST_DURATION_MS = 2500;
 
 export function useGameState() {
   const [score, setScore] = useState(0);
+  const [balls, setBalls] = useState(3);
+  const [isRunning, setIsRunning] = useState(false);
   const [charging, setCharging] = useState(false);
   const [chargeLevel, setChargeLevel] = useState(0);
+  const [boosted, setBoosted] = useState(false);
+  const [lightsActivated, setLightsActivated] = useState([]);
+  const boostTimer = useRef(null);
+  const isConnected = useRef(false);
 
   useEffect(() => {
+    if (isConnected.current) return;
+    isConnected.current = true;
+
+    socketService.connect();
+
+    socketService.onScreenMessage((data) => {
+      if (data.type === "state_update") {
+        setScore(data.state.score);
+        setBalls(data.state.balls);
+        setIsRunning(data.state.isRunning);
+        setLightsActivated(data.state.lightsActivated ?? []);
+      }
+      if (data.type === "game_over") {
+        setScore(data.state.score);
+        setBalls(0);
+        setIsRunning(false);
+        setLightsActivated([]);
+      }
+    });
+
     const onCharge = (e) => {
       setCharging(e.detail.charging);
       setChargeLevel(e.detail.level);
     };
     window.addEventListener("ball-charge", onCharge);
-    return () => window.removeEventListener("ball-charge", onCharge);
+
+    return () => {
+      window.removeEventListener("ball-charge", onCharge);
+    };
   }, []);
 
-  const onBumperHit = useCallback(() => setScore((s) => s + 100), []);
-  const onSlingshotHit = useCallback(() => setScore((s) => s + 50), []);
+  const { groupStates } = useLaneGroups(lightsActivated);
 
-  return { score, charging, chargeLevel, onBumperHit, onSlingshotHit };
+  const onBonus = useCallback((points) => setScore((s) => s + points), []);
+  const {
+    cardHits,
+    cardsRaised,
+    phase: annexPhase,
+    onCardHit,
+    onQuestLost,
+  } = useAnnexQuest(onBonus);
+
+  const onSensorHit = useCallback((groupId, laneIndex) => {
+    const group = LANE_GROUPS.find((g) => g.id === groupId);
+    const sensorName = group?.lanes[laneIndex]?.sensor;
+    if (sensorName) {
+      socketService.send("light_sensor", { sensorId: sensorName });
+    }
+  }, []);
+
+  const onBumperHit = useCallback(() => {
+    socketService.send("bumper_hit");
+  }, []);
+
+  const onSlingshotHit = useCallback(() => {
+    socketService.send("slingshot_hit");
+  }, []);
+
+  const startGame = useCallback((playerName) => {
+    socketService.send("start_game", { playerName });
+  }, []);
+
+  const onBoostHit = useCallback(() => {
+    setBoosted(true);
+    window.dispatchEvent(new CustomEvent("ball-boost"));
+    clearTimeout(boostTimer.current);
+    boostTimer.current = setTimeout(() => setBoosted(false), BOOST_DURATION_MS);
+  }, []);
+
+  const onBallLost = useCallback(() => {
+    socketService.send("ball_lost");
+  }, []);
+
+  return {
+    score,
+    balls,
+    isRunning,
+    charging,
+    chargeLevel,
+    boosted,
+    lightsActivated,
+    groupStates,
+    onSensorHit,
+    cardStates: cardHits,
+    cardsRaised,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
+    onBoostHit,
+    onBumperHit,
+    onSlingshotHit,
+    startGame,
+    onBallLost,
+  };
 }

@@ -1,7 +1,7 @@
 import { Quaternion, Euler } from "three";
 
 export const ANGLE_ACTIVE = (50 * Math.PI) / 180;
-export const SLERP = 0.3;
+export const SLERP = 0.35;
 
 export const ROTATIONS = {
   baseRight: new Quaternion().setFromEuler(new Euler(0, 0, 0)),
@@ -16,24 +16,24 @@ export const TILT_X = (7 * Math.PI) / 180;
 export const FLIP_Y = Math.PI;
 
 export const FLIPPER_CONFIG = {
-  left: { nodeName: "COL_flipper_L", pivotWorld: [-0.18, -0.075, 0.66] },
-  right: { nodeName: "COL_flipper_R", pivotWorld: [0.12, -0.075, 0.66] },
+  left: {
+    nodeName: "COL_flipper_L",
+    pivotWorld: [-0.17, -0.075, 0.66],
+    meshRotationY: 0,
+  },
+  right: {
+    nodeName: "COL_flipper_R",
+    pivotWorld: [0.1, -0.075, 0.66],
+    meshRotationY: 0,
+  },
   right2: {
-    nodeName: "COL_flipper_R001",
-    pivotWorld: [0.33, -0.05, 0.0033942],
+    nodeName: "COL_flipper_R_up",
+    pivotWorld: [0.33, -0.05, 0.1246],
   },
 };
 
 export const FLIPPER_STATIC_NODES = {
   left: ["COL_wall_flipper_L", "COL_CURVE_flipper_down_courbe_L"],
-  right: [
-    "COL_wall_flipper_R",
-    "COL_CURVE_flipper_down_courbe_R",
-    "COL_flipper_UP_R",
-  ],
-  right2: [
-    "COL_wall_flipper_R",
-    "COL_CURVE_flipper_down_courbe_R.001",
-    "COL_flipper_UP_R.001",
-  ],
+  right: ["COL_wall_flipper_R", "COL_CURVE_flipper_down_courbe_R"],
+  right2: [],
 };

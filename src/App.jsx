@@ -1,21 +1,18 @@
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { PinballScene } from "./features/pinball/components/PinballScene";
 import { useFlipperControls } from "./features/pinball/hooks/useFlipperControls";
-import { useGameState } from "./features/pinball/hooks/useGameState";
-import ScoreDisplay from "./components/ScoreDisplay";
-import ChargeBar from "./components/ChargeBar";
-import ControlsHint from "./components/ControlsHint";
+import { useGame } from "./features/pinball/context/GameContext";
+import ScoreDisplay from "./features/pinball/components/ui/ScoreDisplay";
+import ChargeBar from "./features/pinball/components/ui/ChargeBar";
+import ControlsHint from "./features/pinball/components/ui/ControlsHint";
 import StatsPanel from "./utils/stats.js";
+import CameraDebugger from "./utils/CameraDebugger.js";
+import CameraIntro from "./features/camera/intro.jsx";
 
 const env = import.meta.env.VITE_ENV;
-let debugState;
-if (env === "dev") {
-  debugState = true;
-} else {
-  debugState = false;
-}
+const debugState = env === "dev";
 
 export default function App() {
   const {
@@ -27,8 +24,10 @@ export default function App() {
     right2Rot,
     activeFlippers,
   } = useFlipperControls();
-  const { score, charging, chargeLevel, onBumperHit, onSlingshotHit } =
-    useGameState();
+  const { score, charging, chargeLevel } = useGame();
+
+  // false = intro en cours, true = intro terminée (OrbitControls actifs)
+  const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
@@ -40,6 +39,13 @@ export default function App() {
         shadows
         camera={{ position: [0, 3, 2.5], fov: 45, near: 0.01, far: 100 }}
       >
+        {/* onFinish reçoit true (terminée) ou false (reset après game over) */}
+        <CameraIntro
+          active={!cameraIntroFinished}
+          onFinish={(finished) => setCameraIntroFinished(finished)}
+        />
+
+        <CameraDebugger />
         <ambientLight intensity={0.5} />
         <directionalLight
           position={[0.5, 4, 1]}
@@ -49,6 +55,7 @@ export default function App() {
           shadow-mapSize-height={2048}
         />
         {debugState && <StatsPanel />}
+
         <Suspense fallback={null}>
           <PinballScene
             rightRef={rightRef}
@@ -58,11 +65,12 @@ export default function App() {
             leftRot={leftRot}
             right2Rot={right2Rot}
             activeFlippers={activeFlippers}
-            onBumperHit={onBumperHit}
-            onSlingshotHit={onSlingshotHit}
           />
         </Suspense>
-        <OrbitControls makeDefault target={[0, 0, 0]} />
+
+        {cameraIntroFinished && (
+          <OrbitControls makeDefault target={[0, 0, 0]} />
+        )}
       </Canvas>
     </div>
   );

@@ -1,20 +1,19 @@
 import { Suspense } from "react";
 import { Physics } from "@react-three/rapier";
-import { OrbitControls } from "@react-three/drei";
-import { PinballTable } from "./PinballTable";
-import { FlipperStaticWalls } from "./FlipperStaticWalls";
-import FlipperMesh from "./FlipperMesh";
-import { FlipperAnimator } from "./FlipperAnimator";
-import Ball from "./BallComponent";
+import { PinballTable } from "./scene/PinballTable";
+import { FlipperStaticWalls } from "./flippers/FlipperStaticWalls";
+import FlipperMesh from "./flippers/FlipperMesh";
+import { FlipperAnimator } from "./flippers/FlipperAnimator";
+import Ball from "./ball/BallComponent";
+import { LaneSensors } from "./lanes/LaneSensors";
+import { AnnexZone } from "./annex/AnnexZone";
+import { AnnexFlippers } from "./annex/AnnexFlippers";
 import { TILT_X, FLIP_Y } from "../constants/flipperConfig";
+import { useGame } from "../context/GameContext";
 
 const env = import.meta.env.VITE_ENV;
-let debugState;
-if (env === "dev") {
-  debugState = true;
-} else {
-  debugState = false;
-}
+const debugState = env === "dev";
+
 export function PinballScene({
   rightRef,
   leftRef,
@@ -23,11 +22,23 @@ export function PinballScene({
   leftRot,
   right2Rot,
   activeFlippers,
-  onBumperHit,
-  onSlingshotHit,
 }) {
+  const {
+    onBumperHit,
+    onSlingshotHit,
+    cardStates,
+    annexPhase,
+    onCardHit,
+    onQuestLost,
+  } = useGame();
+
   return (
-    <Physics gravity={[0, -9.81, 0]} debug={debugState}>
+    <Physics
+      gravity={[0, -9.81, 0]}
+      debug={debugState}
+      timeStep={1 / 120}
+      numSolverIterations={8}
+    >
       <group rotation={[TILT_X, FLIP_Y, 0]}>
         <Suspense fallback={null}>
           <PinballTable
@@ -37,13 +48,24 @@ export function PinballScene({
           <FlipperStaticWalls side="left" />
           <FlipperStaticWalls side="right" />
           <FlipperStaticWalls side="right2" />
+          <AnnexZone
+            cardStates={cardStates}
+            annexPhase={annexPhase}
+            onCardHit={onCardHit}
+            onQuestLost={onQuestLost}
+          />
         </Suspense>
       </group>
+
+      <Suspense fallback={null}>
+        <LaneSensors />
+      </Suspense>
 
       <Suspense fallback={null}>
         <FlipperMesh side="left" ref={leftRef} />
         <FlipperMesh side="right" ref={rightRef} />
         <FlipperMesh side="right2" ref={right2Ref} />
+        <AnnexFlippers activeFlippers={activeFlippers} />
       </Suspense>
 
       <Ball />
