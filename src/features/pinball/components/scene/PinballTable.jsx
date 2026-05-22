@@ -8,6 +8,8 @@ import {
   BUMPER_NODES,
   SLINGSHOT_NODES,
 } from "../../constants/tableNodes";
+import { useSound } from "../../hooks/useSound";
+import { useEffect } from "react";
 
 const GLB = "/pinball.glb?v=3";
 
@@ -104,6 +106,12 @@ function SlingshotMesh({ node, onContact }) {
 
 export function PinballTable({ onBumperHit, onSlingshotHit }) {
   const { nodes } = useGLTF(GLB);
+  const { play, preload } = useSound();
+
+  useEffect(() => {
+    preload("bumper");
+    preload("slingshot");
+  }, []);
 
   return (
     <group>
@@ -137,7 +145,14 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
         const node = nodes[name];
         if (!node) return null;
         return (
-          <SlingshotMesh key={name} node={node} onContact={onSlingshotHit} />
+          <SlingshotMesh
+            key={name}
+            node={node}
+            onContact={() => {
+              onSlingshotHit();
+              play("slingshot", 0.1);
+            }}
+          />
         );
       })}
 
@@ -150,7 +165,10 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
             node={node}
             restitution={5}
             friction={0}
-            onContact={onBumperHit}
+            onContact={() => {
+              onBumperHit();
+              play("bumper", 0.3);
+            }}
           />
         );
       })}
