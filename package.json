@@ -23,6 +23,7 @@
     "@react-three/rapier": "^2.2.0",
     "axios": "^1.13.5",
     "commitlint": "^20.5.0",
+    "mqtt": "^5.15.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "socket.io-client": "^4.8.3",
