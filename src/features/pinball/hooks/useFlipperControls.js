@@ -68,13 +68,9 @@ export function useFlipperControls() {
     */
     const onDown = (e) => {
       if (e.code === "ArrowRight") {
-        play("flippers");
-
         setActiveFlippers((p) => ({ ...p, right: true, right2: true }));
       }
       if (e.code === "ArrowLeft") {
-        play("flippers");
-
         setActiveFlippers((p) => ({ ...p, left: true }));
       }
     };

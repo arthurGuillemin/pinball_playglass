@@ -35,7 +35,7 @@ export function PinballScene({
   return (
     <Physics
       gravity={[0, -9.81, 0]}
-      debug={debugState}
+      debug={false}
       timeStep={1 / 120}
       numSolverIterations={8}
     >
