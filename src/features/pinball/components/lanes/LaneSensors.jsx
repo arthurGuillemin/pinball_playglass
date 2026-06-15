@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { LANE_GROUPS } from "../../constants/laneGroups";
 import { TILT_X, FLIP_Y } from "../../constants/flipperConfig";
 import { useGame } from "../../context/GameContext";
+import { useSound } from "../../hooks/useSound";
 
 const GLB = "/pinball.glb";
 
@@ -78,6 +79,7 @@ function LedMesh({ node, isLit, groupDone }) {
 export function LaneSensors() {
   const { nodes } = useGLTF(GLB);
   const { groupStates, onSensorHit, onBoostHit } = useGame();
+  const { play } = useSound();
 
   useEffect(() => {
     if (import.meta.env.VITE_ENV !== "dev") return;
@@ -117,7 +119,10 @@ export function LaneSensors() {
                 <RigidBody
                   type="fixed"
                   sensor={true}
-                  onIntersectionEnter={() => onSensorHit(group.id, laneIndex)}
+                  onIntersectionEnter={() => {
+                    onSensorHit(group.id, laneIndex);
+                    play("light", 0.3);
+                  }}
                 >
                   <CuboidCollider
                     args={[half, half, half]}

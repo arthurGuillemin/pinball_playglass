@@ -4,8 +4,10 @@ const SOUNDS = {
   launcher: "/sounds/launcher.wav",
   bumper: "sounds/bumper.wav",
   slingshot: "sounds/slingshot.wav",
-  flippers: "sounds/flippers.wav",
+  flippersUP: "sounds/flippersUP.wav",
+  flippersDOWN: "sounds/flippersDOWN.wav",
   death: "sounds/death.wav",
+  light: "sounds/light.wav",
 };
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
