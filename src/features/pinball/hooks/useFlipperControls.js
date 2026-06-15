@@ -43,21 +43,19 @@ export function useFlipperControls() {
       console.log("MQTT:", payload);
       switch (payload) {
         case "RIGHT_DOWN":
-          play("flippers");
-          console.log("sound");
-
+          play("flippersUP");
           setActiveFlippers((p) => ({ ...p, right: true, right2: true }));
           break;
         case "RIGHT_UP":
-          play("flippers");
+          play("flippersDOWN");
           setActiveFlippers((p) => ({ ...p, right: false, right2: false }));
           break;
         case "LEFT_DOWN":
-          play("flippers");
+          play("flippersUP");
           setActiveFlippers((p) => ({ ...p, left: true }));
           break;
         case "LEFT_UP":
-          play("flippers");
+          play("flippersDOWN");
           setActiveFlippers((p) => ({ ...p, left: false }));
           break;
         default:
