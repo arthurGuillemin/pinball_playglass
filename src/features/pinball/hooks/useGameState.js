@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useLaneGroups, LANE_GROUPS } from "./useLaneGroups";
 import { useAnnexQuest } from "./useAnnexQuest";
 import socketService from "../../../services/socket.service";
+import { useSound } from "./useSound";
 
 const BOOST_DURATION_MS = 2500;
 
@@ -15,11 +16,11 @@ export function useGameState() {
   const [lightsActivated, setLightsActivated] = useState([]);
   const boostTimer = useRef(null);
   const isConnected = useRef(false);
+  const { play } = useSound();
 
   useEffect(() => {
     if (isConnected.current) return;
-    isConnected.current = true;
-
+    isConnected.cur;
     socketService.connect();
 
     socketService.onScreenMessage((data) => {
@@ -80,11 +81,13 @@ export function useGameState() {
   }, []);
 
   const onBoostHit = useCallback(() => {
+    play("tube", 0.3);
+
     setBoosted(true);
     window.dispatchEvent(new CustomEvent("ball-boost"));
     clearTimeout(boostTimer.current);
     boostTimer.current = setTimeout(() => setBoosted(false), BOOST_DURATION_MS);
-  }, []);
+  }, [play]);
 
   const onBallLost = useCallback(() => {
     socketService.send("ball_lost");

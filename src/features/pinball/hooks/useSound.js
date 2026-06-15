@@ -8,6 +8,7 @@ const SOUNDS = {
   flippersDOWN: "sounds/flippersDOWN.wav",
   death: "sounds/death.wav",
   light: "sounds/light.wav",
+  tube: "sounds/tube.wav",
 };
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
