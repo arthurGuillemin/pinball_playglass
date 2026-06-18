@@ -9,6 +9,12 @@ const SOUNDS = {
   death: "sounds/death.wav",
   light: "sounds/light.wav",
   tube: "sounds/tube.wav",
+  narrator1: "sounds/narrator1.wav",
+  narrator2: "sounds/narrator2.wav",
+  narrator3: "sounds/narrator3.wav",
+  narrator4: "sounds/narrator4.wav",
+  narrator5: "sounds/narrator5.wav",
+  jackpot: "sounds/jackpot.wav",
 };
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();

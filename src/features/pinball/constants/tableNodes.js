@@ -25,6 +25,7 @@ export const CURVE_NODES = [
   "COL_CURVE_flipper_down_courbe_R",
   "COL_CURVE_flipper_down_courbe_L",
   "COL_RAMP01",
+  "COL_ramp2",
 ];
 
 // Scale non-uniforme → hull obligatoire

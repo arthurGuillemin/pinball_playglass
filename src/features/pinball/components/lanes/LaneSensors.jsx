@@ -78,8 +78,13 @@ function LedMesh({ node, isLit, groupDone }) {
 
 export function LaneSensors() {
   const { nodes } = useGLTF(GLB);
-  const { groupStates, onSensorHit, onBoostHit } = useGame();
+  const { groupStates, onSensorHit, onBoostHit, onRampeOut } = useGame();
   const { play } = useSound();
+
+  useEffect(() => {
+    const rampeNodes = Object.keys(nodes).filter((n) => n.startsWith("SENSOR"));
+    console.log("SENSOR_lane_rampe_out nodes trouvés:", rampeNodes);
+  }, [nodes]);
 
   useEffect(() => {
     if (import.meta.env.VITE_ENV !== "dev") return;
@@ -135,6 +140,8 @@ export function LaneSensors() {
           );
         });
       })}
+
+      {/* SENSOR_boost */}
       {Object.keys(nodes)
         .filter((n) => n.startsWith("SENSOR_boost"))
         .map((name) => {
@@ -148,6 +155,28 @@ export function LaneSensors() {
               type="fixed"
               sensor={true}
               onIntersectionEnter={onBoostHit}
+            >
+              <CuboidCollider
+                args={[half, half, half]}
+                position={[worldPos.x, worldPos.y, worldPos.z]}
+              />
+            </RigidBody>
+          );
+        })}
+
+      {Object.keys(nodes)
+        .filter((n) => n.startsWith("SENSOR_lane_rampe_out"))
+        .map((name) => {
+          const n = nodes[name];
+          if (!n) return null;
+          const worldPos = toWorldPos(n.position.clone());
+          const half = (n.scale?.x ?? 0.0124) * 1.5;
+          return (
+            <RigidBody
+              key={name}
+              type="fixed"
+              sensor={true}
+              onIntersectionEnter={onRampeOut}
             >
               <CuboidCollider
                 args={[half, half, half]}

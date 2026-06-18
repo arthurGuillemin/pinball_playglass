@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Quaternion } from "three";
 import mqtt from "mqtt";
 import { useSound } from "./useSound";
+import { MAX_CHARGE_TIME, MAX_VELOCITY } from "../constants/ballConfig";
 
 export function useFlipperControls() {
   const rightRef = useRef(null);
@@ -15,16 +16,38 @@ export function useFlipperControls() {
     left: false,
     right2: false,
   });
-  //temporaire
+
   const { play } = useSound();
-  const password = import.meta.env.MQTTPASSWORD;
+
+  // Simule un appui chargé depuis une durée en ms (vient du MQTT LAUNCH_UP:<ms>)
+  function triggerLaunchFromDuration(durationMs) {
+    const ratio = Math.min(durationMs / MAX_CHARGE_TIME, 1);
+    const speed = 0.5 + ratio * (MAX_VELOCITY - 0.5);
+
+    // On émet d'abord ball-charge pour que l'UI sache qu'on charge
+    window.dispatchEvent(
+      new CustomEvent("ball-charge", {
+        detail: { charging: true, level: ratio },
+      }),
+    );
+
+    // Puis on simule le relâchement immédiatement avec la bonne vélocité
+    window.dispatchEvent(
+      new CustomEvent("ball-launch-mqtt", { detail: { speed } }),
+    );
+
+    window.dispatchEvent(
+      new CustomEvent("ball-charge", { detail: { charging: false, level: 0 } }),
+    );
+  }
+
   useEffect(() => {
     /*
       MQTT
     */
     const client = mqtt.connect("ws://localhost:9001", {
       username: "arthur",
-      password: password,
+      password: "1234",
     });
 
     client.on("connect", () => {
@@ -41,6 +64,26 @@ export function useFlipperControls() {
     client.on("message", (_, message) => {
       const payload = message.toString();
       console.log("MQTT:", payload);
+
+      // LAUNCH_UP:<durée_ms>
+      if (payload.startsWith("LAUNCH_UP:")) {
+        const durationMs = parseInt(payload.split(":")[1], 10);
+        if (!isNaN(durationMs)) {
+          triggerLaunchFromDuration(durationMs);
+        }
+        return;
+      }
+
+      // LAUNCH_DOWN : on peut ignorer ou ajouter un son/feedback visuel
+      if (payload === "LAUNCH_DOWN") {
+        window.dispatchEvent(
+          new CustomEvent("ball-charge", {
+            detail: { charging: true, level: 0 },
+          }),
+        );
+        return;
+      }
+
       switch (payload) {
         case "RIGHT_DOWN":
           play("flippersUP");

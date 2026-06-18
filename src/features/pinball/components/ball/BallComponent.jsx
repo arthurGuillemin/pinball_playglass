@@ -57,6 +57,27 @@ function Ball() {
     emitCharge(false);
   }, [play]);
 
+  // Lancement depuis MQTT — la vitesse est déjà calculée dans useFlipperControls
+  const launchFromMqtt = useCallback(
+    (speed) => {
+      if (!ref.current) return;
+      ref.current.setLinvel({ x: 0, y: 0, z: -speed }, true);
+      cancelAnimationFrame(animFrame.current);
+      chargeStart.current = null;
+      play("launcher", 0.3);
+      emitCharge(false);
+    },
+    [play],
+  );
+
+  useEffect(() => {
+    const onMqttLaunch = (e) => {
+      launchFromMqtt(e.detail.speed);
+    };
+    window.addEventListener("ball-launch-mqtt", onMqttLaunch);
+    return () => window.removeEventListener("ball-launch-mqtt", onMqttLaunch);
+  }, [launchFromMqtt]);
+
   useEffect(() => {
     const onBoost = () => {
       if (!ref.current) return;

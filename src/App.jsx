@@ -10,7 +10,7 @@ import ControlsHint from "./features/pinball/components/ui/ControlsHint";
 import StatsPanel from "./utils/stats.js";
 import CameraDebugger from "./utils/CameraDebugger.js";
 import CameraIntro from "./features/camera/intro.jsx";
-
+import TubeCinematic from "./features/camera/tube.jsx";
 const env = import.meta.env.VITE_ENV;
 const debugState = env === "dev";
 
@@ -28,6 +28,7 @@ export default function App() {
 
   // false = intro en cours, true = intro terminée (OrbitControls actifs)
   const [cameraIntroFinished, setCameraIntroFinished] = useState(false);
+  const [annexTraveling, setAnnexTraveling] = useState(false);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#111" }}>
@@ -43,6 +44,10 @@ export default function App() {
         <CameraIntro
           active={!cameraIntroFinished}
           onFinish={(finished) => setCameraIntroFinished(finished)}
+        />
+        <TubeCinematic
+          onStart={() => setAnnexTraveling(true)}
+          onFinish={() => setAnnexTraveling(false)}
         />
 
         <CameraDebugger />
@@ -68,7 +73,7 @@ export default function App() {
           />
         </Suspense>
 
-        {cameraIntroFinished && (
+        {cameraIntroFinished && !annexTraveling && (
           <OrbitControls makeDefault target={[0, 0, 0]} />
         )}
       </Canvas>

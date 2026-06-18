@@ -19,25 +19,25 @@ const CARDS = [
   {
     sensor: "SENSOR_card_1",
     led: "LED_lane_card_1",
-    pos: [0.14, 0.3908, 1.5972],
+    pos: [0.14, 0.3908, 2.481],
     half: [0.05, 0.06, 0.05],
   },
   {
     sensor: "SENSOR_card_2",
     led: "LED_lane_card_2",
-    pos: [0.05, 0.3908, 1.6207],
+    pos: [0.05, 0.3908, 2.5045],
     half: [0.05, 0.06, 0.05],
   },
   {
     sensor: "SENSOR_card_3",
     led: "LED_lane_card_3",
-    pos: [-0.05, 0.3908, 1.6207],
+    pos: [-0.05, 0.3908, 2.5045],
     half: [0.05, 0.06, 0.05],
   },
   {
     sensor: "SENSOR_card_4",
     led: "LED_lane_card_4",
-    pos: [-0.14, 0.3908, 1.5972],
+    pos: [-0.14, 0.3908, 2.481],
     half: [0.05, 0.06, 0.05],
   },
 ];
@@ -46,7 +46,7 @@ const COLOR_DIM = new THREE.Color("#3a2000");
 const COLOR_ON = new THREE.Color("#ffaa00");
 const COLOR_COMPLETED = new THREE.Color("#fff5cc");
 
-// Rend un node Three.js quel que soit son type (Mesh ou Group multi-matériaux)
+// Rend un node Three.js quel que soit son type (Mesh ou Group multi-matÃ©riaux)
 function RenderNode({ node, ...props }) {
   if (!node) return null;
   if (node.type === "Mesh") {
@@ -203,7 +203,7 @@ export function AnnexZone({ cardStates, annexPhase, onCardHit, onQuestLost }) {
       >
         <CuboidCollider
           args={[0.25, 0.025, 0.25]}
-          position={[0, 0.3, 1.4628]}
+          position={[0, 0.3, 2.3465]}
         />
         <RenderNode node={nodes[FLOOR_NODE]} castShadow receiveShadow />
       </RigidBody>
@@ -211,7 +211,10 @@ export function AnnexZone({ cardStates, annexPhase, onCardHit, onQuestLost }) {
         <StaticMesh key={name} node={nodes[name]} />
       ))}
       <RigidBody type="fixed" sensor onIntersectionEnter={onQuestLost}>
-        <CuboidCollider args={[0.25, 0.06, 0.04]} position={[0, 0.25, 1.21]} />
+        <CuboidCollider
+          args={[0.25, 0.06, 0.04]}
+          position={[0, 0.25, 2.0938]}
+        />
       </RigidBody>
       {CARDS.map((cardData, i) => (
         <CardTarget

@@ -1,4 +1,23 @@
+import { useEffect, useRef } from "react";
+import { useSound } from "../../hooks/useSound";
+
 export default function ScoreDisplay({ score }) {
+  const { play } = useSound();
+
+  const lastThreshold = useRef(0);
+
+  useEffect(() => {
+    const currentThreshold = Math.floor(score / 5000);
+
+    if (currentThreshold > lastThreshold.current) {
+      const randomVoice = Math.floor(Math.random() * 5) + 1;
+
+      play(`narrator${randomVoice}`, 5);
+
+      lastThreshold.current = currentThreshold;
+    }
+  }, [score, play]);
+
   return (
     <div
       style={{

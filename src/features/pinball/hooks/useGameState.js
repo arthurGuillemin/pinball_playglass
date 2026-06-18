@@ -79,18 +79,23 @@ export function useGameState() {
   const startGame = useCallback((playerName) => {
     socketService.send("start_game", { playerName });
   }, []);
-
   const onBoostHit = useCallback(() => {
     play("tube", 0.3);
-
+    window.dispatchEvent(new CustomEvent("annex-camera"));
     setBoosted(true);
     window.dispatchEvent(new CustomEvent("ball-boost"));
     clearTimeout(boostTimer.current);
     boostTimer.current = setTimeout(() => setBoosted(false), BOOST_DURATION_MS);
   }, [play]);
 
+  const onRampeOut = useCallback(() => {
+    window.dispatchEvent(new CustomEvent("main-camera"));
+    play("tube", 0.3);
+  }, [play]);
+
   const onBallLost = useCallback(() => {
     socketService.send("ball_lost");
+    window.dispatchEvent(new CustomEvent("main-camera"));
   }, []);
 
   return {
@@ -113,5 +118,6 @@ export function useGameState() {
     onSlingshotHit,
     startGame,
     onBallLost,
+    onRampeOut,
   };
 }

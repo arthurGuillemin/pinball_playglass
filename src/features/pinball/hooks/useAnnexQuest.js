@@ -1,14 +1,15 @@
 import { useState, useCallback, useRef } from "react";
-
-const QUEST_BONUS_PHASE1 = 500;
-const QUEST_BONUS_PHASE2 = 1500;
+import socketService from "../../../services/socket.service";
+import { useSound } from "./useSound";
 const CARD_RISE_DELAY_MS = 900;
 
-export function useAnnexQuest(onBonus) {
+export function useAnnexQuest() {
   const [cardHits, setCardHits] = useState([false, false, false, false]);
   const [cardsRaised, setCardsRaised] = useState([true, true, true, true]);
   const [phase, setPhase] = useState(1);
   const riseTimer = useRef(null);
+  const sentRef = useRef(false);
+  const { play } = useSound();
 
   const onCardHit = useCallback(
     (index) => {
@@ -24,22 +25,23 @@ export function useAnnexQuest(onBonus) {
         });
 
         const allHit = next.every(Boolean);
-        if (allHit) {
-          setPhase((p) => {
-            const bonus = p === 1 ? QUEST_BONUS_PHASE1 : QUEST_BONUS_PHASE2;
-            onBonus?.(bonus);
-            if (riseTimer.current) clearTimeout(riseTimer.current);
-            riseTimer.current = setTimeout(() => {
-              setCardsRaised([true, true, true, true]);
-              setCardHits([false, false, false, false]);
-            }, CARD_RISE_DELAY_MS);
-            return p === 1 ? 2 : 1;
-          });
+        if (allHit && !sentRef.current) {
+          sentRef.current = true;
+          play("jackpot", 0.3);
+          socketService.send("cards_down");
+          if (riseTimer.current) clearTimeout(riseTimer.current);
+          riseTimer.current = setTimeout(() => {
+            setCardsRaised([true, true, true, true]);
+            setCardHits([false, false, false, false]);
+            sentRef.current = false;
+          }, CARD_RISE_DELAY_MS);
+          setPhase((p) => (p === 1 ? 2 : 1));
         }
+
         return next;
       });
     },
-    [onBonus],
+    [play],
   );
 
   const onQuestLost = useCallback(() => {
@@ -47,6 +49,7 @@ export function useAnnexQuest(onBonus) {
     setCardHits([false, false, false, false]);
     setCardsRaised([true, true, true, true]);
     setPhase(1);
+    sentRef.current = false;
   }, []);
 
   return { cardHits, cardsRaised, phase, onCardHit, onQuestLost };

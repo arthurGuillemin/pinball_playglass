@@ -8,8 +8,8 @@ import { TILT_X, FLIP_Y, SLERP } from "../../constants/flipperConfig";
 const GLB = "/pinball.glb";
 
 const ANGLE_ACTIVE = (50 * Math.PI) / 180;
-const PIVOT_R = [0.09838, 0.6, -2.1];
-const PIVOT_L = [-0.10013, 0.6, -2.1];
+const PIVOT_R = [0.09838, 0.6, -2.07];
+const PIVOT_L = [-0.10013, 0.6, -2.07];
 
 const ROT = {
   restR: new Quaternion().setFromEuler(new Euler(0, 0, 0)),
