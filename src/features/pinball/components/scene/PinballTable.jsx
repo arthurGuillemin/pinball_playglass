@@ -10,10 +10,13 @@ import {
 } from "../../constants/tableNodes";
 
 import { useSound } from "../../hooks/useSound";
-import { useEffect } from "react";
 
 const GLB = "/pinball.glb";
+const DICE_GLB = "/dice.glb";
+
 const defaultMat = new MeshStandardMaterial({ color: "#aaaaaa", side: 2 });
+
+const MUSHROOM_NODES = ["champi1", "champi2", "champi3"];
 
 function FloorCollider() {
   return (
@@ -23,10 +26,6 @@ function FloorCollider() {
         friction={0.5}
         restitution={0.3}
       />
-      <mesh receiveShadow>
-        <boxGeometry args={[0.9, 0.05, 1.64]} />
-        <meshStandardMaterial color="#555" roughness={0.8} metalness={0.1} />
-      </mesh>
     </RigidBody>
   );
 }
@@ -103,13 +102,74 @@ function SlingshotMesh({ node, onContact }) {
   );
 }
 
+function VisualNode({ node }) {
+  if (!node) return null;
+  if (node.type === "Mesh") {
+    return (
+      <mesh
+        geometry={node.geometry}
+        material={node.material}
+        position={node.position}
+        quaternion={node.quaternion}
+        scale={node.scale}
+        castShadow
+      />
+    );
+  }
+  if (node.type === "Group" || node.type === "Object3D") {
+    return (
+      <group
+        position={node.position}
+        quaternion={node.quaternion}
+        scale={node.scale}
+      >
+        {node.children?.map((child, i) => (
+          <VisualNode key={i} node={child} />
+        ))}
+      </group>
+    );
+  }
+  return null;
+}
+
+function ExternalModel({
+  scene,
+  scale = 0.1,
+  position = [0, 0, 0],
+  rotation = [0, 0, 0],
+}) {
+  if (!scene) return null;
+  return (
+    <primitive
+      object={scene}
+      scale={scale}
+      position={position}
+      rotation={rotation}
+    />
+  );
+}
+
 export function PinballTable({ onBumperHit, onSlingshotHit }) {
   const { nodes } = useGLTF(GLB);
+  const { scene: diceScene } = useGLTF(DICE_GLB);
   const { play } = useSound();
+
+  const floorNode = nodes["COL_floor"];
 
   return (
     <group>
       <FloorCollider />
+      {floorNode && (
+        <mesh
+          geometry={floorNode.geometry}
+          material={floorNode.material}
+          position={floorNode.position}
+          quaternion={floorNode.quaternion}
+          scale={floorNode.scale}
+          receiveShadow
+        />
+      )}
+
       {STATIC_WALL_NODES.map((name) => {
         const n = nodes[name];
         if (!n) return null;
@@ -161,8 +221,20 @@ export function PinballTable({ onBumperHit, onSlingshotHit }) {
           />
         );
       })}
+      {MUSHROOM_NODES.map((name) => {
+        const n = nodes[name];
+        if (!n) return null;
+        return <VisualNode key={name} node={n} />;
+      })}
+      <ExternalModel
+        scene={diceScene}
+        scale={0.03}
+        position={[0, 0.98, 2.67]}
+        rotation={[0, Math.PI, 0]}
+      />
     </group>
   );
 }
 
 useGLTF.preload(GLB);
+useGLTF.preload(DICE_GLB);

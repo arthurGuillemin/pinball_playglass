@@ -24,8 +24,8 @@ export const CURVE_NODES = [
   "COL_CURVE_circle",
   "COL_CURVE_flipper_down_courbe_R",
   "COL_CURVE_flipper_down_courbe_L",
-  "COL_RAMP01",
-  "COL_ramp2",
+  "COL_ramp_1",
+  "COL_ramp_2",
 ];
 
 // Scale non-uniforme → hull obligatoire
@@ -36,6 +36,8 @@ export const BUMPER_NODES = [
   "COL_bumper_02",
   "COL_bumper_03",
   "COL_bumper_04",
+  "COL_bumper_05",
+  "COL_bumper_06",
   "COL_mini_bumper_01",
   "COL_mini_bumper_02",
   "COL_mini_bumper_03",
