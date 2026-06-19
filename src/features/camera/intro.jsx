@@ -5,11 +5,16 @@ import { useGame } from "../pinball/context/GameContext";
 
 const START_POS = new THREE.Vector3(-0.0429, -0.0497, 0.786);
 const TARGET_POS = new THREE.Vector3(
-  -0.0031482368870522606,
-  1.6802378199245809,
-  1.2681252268760064,
+  0.0008573606614677,
+  2.052221119462724,
+  0.2631354204559488,
 );
-const TARGET_LOOK = new THREE.Vector3(0, 0, 0);
+
+const TARGET_LOOK = new THREE.Vector3(
+  -0.0012172428294691686,
+  1.0563327468386152,
+  0.16424547531753497,
+);
 
 function CameraIntro({ active, onFinish }) {
   const { camera } = useThree();

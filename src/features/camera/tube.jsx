@@ -6,12 +6,15 @@ const ANNEX_POS = new THREE.Vector3(-0.006032346496364, 2, -0.9590925838537748);
 const ANNEX_LOOK = new THREE.Vector3(0, 0.8, -2.5);
 
 const HOME_POS = new THREE.Vector3(
-  -0.0031482368870522606,
-  1.6802378199245809,
-  1.2681252268760064,
+  0.0008573606614677,
+  2.052221119462724,
+  0.2631354204559488,
 );
-const HOME_LOOK = new THREE.Vector3(0, 0, 0);
-
+const HOME_LOOK = new THREE.Vector3(
+  -0.0012172428294691686,
+  1.0563327468386152,
+  0.16424547531753497,
+);
 export default function TubeCinematic({ onFinish, onStart }) {
   const { camera } = useThree();
   const active = useRef(false);
