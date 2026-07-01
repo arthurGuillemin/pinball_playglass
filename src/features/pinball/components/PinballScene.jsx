@@ -66,9 +66,10 @@ export function PinballScene({
         <FlipperMesh side="right" ref={rightRef} />
         <FlipperMesh side="right2" ref={right2Ref} />
         <AnnexFlippers activeFlippers={activeFlippers} />
+
+        <Ball />
       </Suspense>
 
-      <Ball />
       <FlipperAnimator
         rightRef={rightRef}
         leftRef={leftRef}

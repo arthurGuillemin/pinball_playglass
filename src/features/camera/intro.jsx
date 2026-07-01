@@ -71,7 +71,7 @@ function CameraIntro({ active, onFinish }) {
 
       if (key === "t" && !started.current) {
         console.log("🔧 Dev : touche T");
-        startGame("Player1");
+        startGame("DEV");
         started.current = true;
         phase.current = 1;
       }
