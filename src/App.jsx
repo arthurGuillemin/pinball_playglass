@@ -73,9 +73,7 @@ export default function App() {
           />
         </Suspense>
 
-        {cameraIntroFinished && !annexTraveling && (
-          <OrbitControls makeDefault target={[0, 0, 0]} />
-        )}
+        {<OrbitControls makeDefault target={[0, 0, 0]} />}
       </Canvas>
     </div>
   );
