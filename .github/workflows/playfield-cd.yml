@@ -1,4 +1,4 @@
-name: CD Production Frontend
+name: CD Production Playfield
 
 on:
   push:
@@ -20,8 +20,6 @@ jobs:
   lint-and-build:
     needs: security-scan
     runs-on: ubuntu-latest
-    outputs:
-      build_success: ${{ steps.build.outcome }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,10 +36,11 @@ jobs:
         continue-on-error: true
 
       - name: Build React
-        id: build
         run: npm run build
         env:
-          VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
+          VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_MQTTPASSWORD: ${{ secrets.VITE_MQTTPASSWORD }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -69,7 +68,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install dependencies
         run: npm ci
@@ -89,7 +88,7 @@ jobs:
           GIT_COMMITTER_NAME: "github-actions[bot]"
           GIT_COMMITTER_EMAIL: "github-actions[bot]@users.noreply.github.com"
 
-  build-and-scan-docker:
+  build-and-push:
     needs: release
     if: needs.release.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
@@ -98,6 +97,8 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+
+      - uses: docker/setup-qemu-action@v3
 
       - uses: docker/setup-buildx-action@v3
 
@@ -117,21 +118,21 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=v${{ needs.release.outputs.new_release_version }}
             type=raw,value=latest
 
-      - name: Build and Push Production
+      - name: Build and Push
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: linux/amd64,linux/arm64    # ← ajoute arm64
+          # amd64 pour CI/tests locaux, arm64 pour le cabinet 
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            VITE_SERVER_URL=${{ secrets.VITE_SERVER_URL }}
+            VITE_WS_URL=${{ secrets.VITE_WS_URL }}
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_MQTTPASSWORD=${{ secrets.VITE_MQTTPASSWORD }}
           cache-from: type=registry,ref=arthurguill/pinball-playfield:buildcache
           cache-to: type=registry,ref=arthurguill/pinball-playfield:buildcache,mode=max
-
-      - name: Wait for image propagation
-        run: sleep 10
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@0.35.0
@@ -149,31 +150,20 @@ jobs:
           sarif_file: trivy-results.sarif
 
   notify-team:
-    needs: [release, build-and-scan-docker]
+    needs: [release, build-and-push]
     if: always() && needs.release.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Notify success
-        if: needs.build-and-scan-docker.result == 'success'
+        if: needs.build-and-push.result == 'success'
         run: |
           curl -H "Content-Type: application/json" \
-            -d "{\"content\": \" **Frontend : Nouvelle Release v${{ needs.release.outputs.new_release_version }}**\n Build et scan Docker réussis\n Image: arthurguill/pinball-playfield:latest\n Triggered by @${{ github.actor }}\"}" \
+            -d "{\"content\": \"**Playfield : Release v${{ needs.release.outputs.new_release_version }}**\nImage Docker pushée pour amd64 + arm64\nTriggered by @${{ github.actor }}\"}" \
             ${{ secrets.DISCORD_WEBHOOK }}
 
       - name: Notify failure
-        if: needs.build-and-scan-docker.result == 'failure'
-        run: |
-          REASON="Docker build"
-          if [ "${{ needs.build-and-scan-docker.result }}" = "failure" ]; then
-            REASON="security scan (Trivy) ou Docker build"
-          fi
-          curl -H "Content-Type: application/json" \
-            -d "{\"content\": \" **Frontend : Release v${{ needs.release.outputs.new_release_version }} - Échec**\n Erreur au niveau: ${REASON}\n Triggered by @${{ github.actor }}\n\n Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
-            ${{ secrets.DISCORD_WEBHOOK }}
-
-      - name: Notify no release
-        if: needs.release.outputs.new_release_published != 'true'
+        if: needs.build-and-push.result == 'failure'
         run: |
           curl -H "Content-Type: application/json" \
-            -d "{\"content\": \" **Frontend : Push sur main**\n Aucune nouvelle release générée\n Triggered by @${{ github.actor }}\"}" \
+            -d "{\"content\": \"**Playfield : Release v${{ needs.release.outputs.new_release_version }} — Échec**\nTriggered by @${{ github.actor }}\nLogs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
             ${{ secrets.DISCORD_WEBHOOK }}

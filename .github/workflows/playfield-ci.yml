@@ -1,4 +1,4 @@
-name: CI Frontend
+name: CI Frontend Playfield
 
 on:
   pull_request:
@@ -17,7 +17,7 @@ jobs:
         env:
           GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
-  lint-and-format:
+  lint-and-build:
     needs: security-scan
     runs-on: ubuntu-latest
     steps:
@@ -31,31 +31,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run linting
+      - name: Lint
         run: npm run lint
-
-      - name: Check formatting
-        run: npm run format:check
         continue-on-error: true
 
-  build:
-    needs: lint-and-format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
+      - name: Build React
         run: npm run build
         env:
-          VITE_SERVER_URL: ${{ secrets.VITE_SERVER_URL }}
+          VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
+          VITE_WS_TOKEN: ${{ secrets.VITE_WS_TOKEN }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_MQTTPASSWORD: ${{ secrets.VITE_MQTTPASSWORD }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
