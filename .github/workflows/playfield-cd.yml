@@ -53,6 +53,7 @@ jobs:
     needs: lint-and-build
     runs-on: ubuntu-latest
     permissions:
+      security-events: write
       contents: write
       issues: write
       pull-requests: write
