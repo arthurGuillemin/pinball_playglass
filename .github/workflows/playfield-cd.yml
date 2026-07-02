@@ -90,12 +90,11 @@ jobs:
 
   build-and-push:
     needs: release
-    if: needs.release.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: main 
           fetch-depth: 0
 
       - uses: docker/setup-qemu-action@v3
@@ -151,7 +150,6 @@ jobs:
 
   notify-team:
     needs: [release, build-and-push]
-    if: always() && needs.release.outputs.new_release_published == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Notify success
